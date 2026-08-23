@@ -1,8 +1,7 @@
-json
 {
   "name": "bitgetpay",
   "version": "1.0.0",
-  "description": "TRC20 Payment Gateway with Admin Panel",
+  "description": "TRC20 Payment Gateway",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
