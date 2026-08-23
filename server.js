@@ -1,10 +1,9 @@
-bitgetpay:
+jawascript
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
-const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
 
@@ -33,22 +32,24 @@ if (!fs.existsSync(uploadDir)){
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Database Connection & Table Creation (Using absolute path)
-const dbPath = path.join(__dirname, 'database.db');
-const db = new sqlite3.Database(dbPath, (err) => {
-    if (err) console.error('Database opening error: ', err.message);
-    else console.log('Connected to SQLite Database.');
-});
+// JSON File Database Setup
+const dbFile = path.join(__dirname, 'database.json');
+if (!fs.existsSync(dbFile)) {
+    fs.writeFileSync(dbFile, JSON.stringify([]));
+}
 
-db.run(`CREATE TABLE IF NOT EXISTS transactions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    username TEXT,
-    amount TEXT,
-    txid TEXT,
-    screenshot TEXT,
-    status TEXT DEFAULT 'Pending',
-    date TEXT
-)`);
+function getTransactions() {
+    try {
+        const data = fs.readFileSync(dbFile, 'utf8');
+        return JSON.parse(data);
+    } catch (e) {
+        return [];
+    }
+}
+
+function saveTransactions(txs) {
+    fs.writeFileSync(dbFile, JSON.stringify(txs, null, 2));
+}
 
 // File Upload Setup (Multer)
 const storage = multer.diskStorage({
@@ -71,14 +72,20 @@ app.post('/submit-payment', upload.single('screenshot'), (req, res) => {
     const screenshot = req.file ? req.file.filename : '';
     const date = new Date().toLocaleString();
 
-    const query = INSERT INTO transactions (username, amount, txid, screenshot, date) VALUES (?, ?, ?, ?, ?);
-    db.run(query, [username, amount, txid, screenshot, date], (err) => {
-        if (err) {
-            console.error(err.message);
-            return res.send("Error saving transaction!");
-        }
-        res.redirect('/?success=1');
-    });
+    let txs = getTransactions();
+    const newTx = {
+        id: txs.length > 0 ? txs[0].id + 1 : 1,
+        username,
+        amount,
+        txid,
+        screenshot,
+        status: 'Pending',
+        date
+    };
+
+    txs.unshift(newTx);
+    saveTransactions(txs);
+    res.redirect('/?success=1');
 });
 
 // --- ADMIN ROUTES ---
@@ -98,32 +105,34 @@ app.post('/admin-login', (req, res) => {
 
 app.get('/admin-panel', (req, res) => {
     if (!req.session.isAdmin) return res.redirect('/admin-login');
-
-    db.all(`SELECT * FROM transactions ORDER BY id DESC`, [], (err, rows) => {
-        if (err) {
-            console.error(err.message);
-            return res.send("Database error");
-        }
-        res.render('admin', { transactions: rows });
-    });
+    const txs = getTransactions();
+    res.render('admin', { transactions: txs });
 });
 
 app.post('/admin/verify/:id', (req, res) => {
     if (!req.session.isAdmin) return res.redirect('/admin-login');
-    const txId = req.params.id;
+    const txId = parseInt(req.params.id);
 
-    db.run(`UPDATE transactions SET status = 'Approved & Verified' WHERE id = ?`, [txId], (err) => {
-        res.redirect('/admin-panel');
-    });
+    let txs = getTransactions();
+    let tx = txs.find(t => t.id === txId);
+    if (tx) {
+        tx.status = 'Approved & Verified';
+        saveTransactions(txs);
+    }
+    res.redirect('/admin-panel');
 });
 
 app.post('/admin/reject/:id', (req, res) => {
     if (!req.session.isAdmin) return res.redirect('/admin-login');
-    const txId = req.params.id;
+    const txId = parseInt(req.params.id);
 
-    db.run(`UPDATE transactions SET status = 'Rejected' WHERE id = ?`, [txId], (err) => {
-        res.redirect('/admin-panel');
-    });
+    let txs = getTransactions();
+    let tx = txs.find(t => t.id === txId);
+    if (tx) {
+        tx.status = 'Rejected';
+        saveTransactions(txs);
+    }
+    res.redirect('/admin-panel');
 });
 
 app.get('/admin-logout', (req, res) => {
@@ -133,8 +142,6 @@ app.get('/admin-logout', (req, res) => {
 
 // Server Listen
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.
-
-0', () => {
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`BitGetPay Server is running on port ${PORT}`);
 });
