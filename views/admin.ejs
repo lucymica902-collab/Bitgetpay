@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Bitgetpay</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
+        h2 { color: #333; margin: 0; }
+        .logout-btn { background: #dc3545; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; }
+        .logout-btn:hover { background: #c82333; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 14px; }
+        th { background: #007bff; color: white; }
+        .status-pending { color: orange; font-weight: bold; }
+        .status-approved { color: green; font-weight: bold; }
+        .status-rejected { color: red; font-weight: bold; }
+        .btn-approve { background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        .btn-reject { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
+        img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h2>Admin Dashboard</h2>
+            <a href="/admin-logout" class="logout-btn">Logout</a>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>User</th>
+                    <th>Amount</th>
+                    <th>TXID</th>
+                    <th>Screenshot</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <% if (transactions.length === 0) { %>
+                    <tr><td colspan="8" style="text-align: center;">No transactions found.</td></tr>
+                <% } else { %>
+                    <% transactions.forEach(tx => { %>
+                        <tr>
+                            <td><%= tx.id %></td>
+                            <td><%= tx.username %></td>
+                            <td><%= tx.amount %> USDT</td>
+                            <td><%= tx.txid %></td>
+                            <td>
+                                <% if (tx.screenshot) { %>
+                                    <a href="/uploads/<%= tx.screenshot %>" target="_blank">
+                                        <img src="/uploads/<%= tx.screenshot %>" alt="Proof">
+                                    </a>
+                                <% } else { %>
+                                    No Image
+                                <% } %>
+                            </td>
+                            <td><%= tx.date %></td>
+                            <td>
+                                <% if (tx.status === 'Pending') { %>
+                                    <span class="status-pending"><%= tx.status %></span>
+                                <% } else if (tx.status.includes('Approved')) { %>
+                                    <span class="status-approved"><%= tx.status %></span>
+                                <% } else { %>
+                                    <span class="status-rejected"><%= tx.status %></span>
+                                <% } %>
+                            </td>
+                            <td>
+                                <% if (tx.status === 'Pending') { %>
+                                    <form action="/admin/verify/<%= tx.id %>" method="POST" style="display:inline;"><button type="submit" class="btn-approve">Approve</button>
+                                    </form>
+                                    <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline; margin-left: 5px;">
+                                        <button type="submit" class="btn-reject">Reject</button>
+                                    </form>
+                                <% } else { %>
+                                    Done
+                                %>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>
