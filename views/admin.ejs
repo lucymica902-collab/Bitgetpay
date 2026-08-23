@@ -5,89 +5,121 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Bitgetpay</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 10px; margin-bottom: 20px; }
-        h2 { color: #333; margin: 0; }
-        .logout-btn { background: #dc3545; color: white; padding: 8px 15px; text-decoration: none; border-radius: 4px; font-weight: bold; }
-        .logout-btn:hover { background: #c82333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { border: 1px solid #dee2e6; padding: 10px; text-align: left; font-size: 14px; }
-        th { background: #007bff; color: white; }
-        .status-pending { color: orange; font-weight: bold; }
-        .status-approved { color: green; font-weight: bold; }
-        .status-rejected { color: red; font-weight: bold; }
-        .btn-approve { background: #28a745; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-        .btn-reject { background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 3px; cursor: pointer; }
-        img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; cursor: pointer; }
+        body { font-family: sans-serif; background: #f4f7fc; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #0066ff; color: white; padding: 15px 20px; border-radius: 8px; }
+        .card { background: white; margin-top: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        input { padding: 10px; margin: 5px 0 12px 0; width: 100%; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
+        button { padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .reject-btn { background: #dc3545; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
+        th { background: #f8f9fa; }
+        img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+        .logout { background: #dc3545; color: white; padding: 8px 15px; text-decoration: none; border-radius: 6px; font-size: 14px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h2>Admin Dashboard</h2>
-            <a href="/admin-logout" class="logout-btn">Logout</a>
-        </div>
 
+    <div class="header">
+        <h2>Admin Dashboard</h2>
+        <a href="/admin-logout" class="logout">Logout</a>
+    </div>
+
+    <!-- Settings & VIP Control Card -->
+    <div class="card">
+        <h3>Control Deposit Settings & VIP Levels</h3>
+        <form action="/admin/settings" method="POST">
+            <label><b>TRC20 Wallet Address</b></label>
+            <input type="text" name="trc_address" value="<%= settings.trc_address %>" required>
+
+            <label><b>USDT to INR Rate</b></label>
+            <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>" required>
+
+            <h3 style="margin-top: 25px; color: #0066ff; border-top: 1px solid #eee; padding-top: 15px;">Manage VIP Levels (Price, Daily Return, Days)</h3>
+            <% settings.vip_levels.forEach((vip, index) => { %>
+                <div style="background: #f8f9fa; padding: 15px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #ddd;">
+                    <b style="color: #333; font-size: 15px;"><%= vip.level %></b><br><br>
+                    <label>Price (USDT):</label>
+                    <input type="text" name="v_price" value="<%= vip.price %>" required>
+                    
+                    <label>Daily Return (USDT):</label>
+                    <input type="text" name="v_daily" value="<%= vip.daily %>" required>
+                    
+                    <label>Time Period (Days):</label>
+                    <input type="text" name="v_days" value="<%= vip.days %>" required>
+                </div>
+            <% }) %>
+
+            <button type="submit" style="width: 100%; padding: 14px; background: #0066ff; font-size: 16px; margin-top: 10px;">Save All Settings & VIP Plans</button>
+        </form>
+    </div>
+
+    <!-- Transactions Control Card -->
+    <div class="card">
+        <h3>User Deposits & Verification</h3>
         <table>
-            <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>User</th>
-                    <th>Amount</th>
-                    <th>TXID</th>
-                    <th>Screenshot</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
-            <tbody>
-                <% if (transactions.length === 0) { %>
-                    <tr><td colspan="8" style="text-align: center;">No transactions found.</td></tr>
-                <% } else { %>
-                    <% transactions.forEach(tx => { %>
-                        <tr>
-                            <td><%= tx.id %></td>
-                            <td><%= tx.username %></td>
-                            <td><%= tx.amount %> USDT</td>
-                            <td><%= tx.txid %></td>
-                            <td>
-                                <% if (tx.screenshot) { %>
-                                    <a href="/uploads/<%= tx.screenshot %>" target="_blank">
-                                        <img src="/uploads/<%= tx.screenshot %>" alt="Proof">
-                                    </a>
-                                <% } else { %>
-                                    No Image
-                                <% } %>
-                            </td>
-                            <td><%= tx.date %></td>
-                            <td>
-                                <% if (tx.status === 'Pending') { %>
-                                    <span class="status-pending"><%= tx.status %></span>
-                                <% } else if (tx.status.includes('Approved')) { %>
-                                    <span class="status-approved"><%= tx.status %></span>
-                                <% } else { %>
-                                    <span class="status-rejected"><%= tx.status %></span>
-                                <% } %>
-                            </td>
-                            <td>
-                                <% if (tx.status === 'Pending') { %>
-                                    <form action="/admin/verify/<%= tx.id %>" method="POST" style="display:inline;"><button type="submit" class="btn-approve">Approve</button>
-                                    </form>
-                                    <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline; margin-left: 5px;">
-                                        <button type="submit" class="btn-reject">Reject</button>
-                                    </form>
-                                <% } else { %>
-                                    Done
-                                %>
-                                <% } %>
-                            </td>
-                        </tr>
-                    <% }) %>
-                <% } %>
-            </tbody>
+            <tr>
+                <th>Date</th>
+                <th>User Phone</th>
+                <th>Amount</th>
+                <th>TXID</th>
+                <th>Screenshot</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            <% if(transactions.length === 0) { %>
+                <tr><td colspan="7" style="text-align: center;">No transactions found.</td></tr>
+            <% } else { %>
+                <% transactions.forEach(tx => { %>
+                    <tr>
+                        <td><%= tx.date %></td>
+                        <td><%= tx.phone %></td>
+                        <td><b><%= tx.amount %> USDT</b></td>
+                        <td><%= tx.txid %></td>
+                        <td>
+                            <% if(tx.screenshot) { %>
+                                <a href="/uploads/<%= tx.screenshot %>" target="_blank"><img src="/uploads/<%= tx.screenshot %>"></a>
+                            <% } else { %> No Image <% } %>
+                        </td>
+                        <td><b><%= tx.status %></b></td>
+                        <td>
+                            <% if(tx.status === 'Pending') { %>
+                                <form action="/admin/verify/<%= tx.id %>" method="POST" style="display:inline;">
+                                    <button type="submit">Approve</button>
+                                </form>
+                                <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="reject-btn">Reject</button>
+                                </form>
+                            <% } else { %>
+                                Done
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } %>
         </table>
     </div>
+
+    <!-- Registered Users List -->
+    <div class="card">
+        <h3>Registered Users (<%= users.length %>)</h3>
+        <table>
+            <tr>
+                <th>Phone Number</th>
+                <th>User ID</th>
+                <th>Balance</th>
+                <th>UPI / Bank Details</th>
+            </tr>
+            <% users.forEach(u => { %>
+                <tr>
+                    <td><%= u.phone %></td>
+                    <td><%= u.referral_code %></td>
+                    <td><b><%= u.balance %> USDT</b></td>
+                    <td>UPI: <%= u.upi  'N/A' %><br>Bank: <%= u.bank_details  'N/A' %></td>
+                </tr>
+            <% }) %>
+        </table>
+    </div>
+
 </body>
 </html>
