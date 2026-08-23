@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deposit - Bitgetpay</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7fc; margin: 0; padding-bottom: 70px; }
+        .header { background: #0066ff; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
+        .card { background: white; margin: 15px; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .title { font-weight: bold; color: #333; margin-bottom: 10px; }
+        .box { background: #f8f9fa; padding: 12px; border-radius: 8px; border: 1px solid #ddd; word-break: break-all; font-family: monospace; font-size: 14px; margin-bottom: 15px; }
+        input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { background: #0066ff; color: white; border: none; font-weight: bold; cursor: pointer; }
+        .success { color: green; font-size: 14px; text-align: center; margin-bottom: 10px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
+        .nav-item { text-align: center; text-decoration: none; color: #666; font-size: 11px; }
+        .nav-item.active { color: #0066ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">USDT Deposit</div>
+    
+    <div class="card">
+        <% if(success) { %> <div class="success">Deposit submitted successfully! Waiting for admin approval.</div> <% } %>
+        <div class="title">Official TRC20 Address (Admin Controlled)</div>
+        <div class="box"><%= settings.trc_address %></div>
+        
+        <div class="title">Current Exchange Rate</div>
+        <div style="color: #0066ff; font-weight: bold; margin-bottom: 15px;">1 USDT ≈ <%= settings.usdt_rate %> INR</div>
+
+        <form action="/submit-deposit" method="POST" enctype="multipart/form-data">
+            <label>Amount (USDT)</label>
+            <input type="number" step="0.01" name="amount" placeholder="Enter USDT amount" required>
+            
+            <label>Transaction ID (TXID)</label>
+            <input type="text" name="txid" placeholder="Enter Blockchain TXID" required>
+            
+            <label>Upload Payment Screenshot</label>
+            <input type="file" name="screenshot" accept="image/*" required>
+            
+            <button type="submit">Submit Deposit</button>
+        </form>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="/" class="nav-item">🏠 Home</a>
+        <a href="/deposit" class="nav-item active">🔄 Deposit</a>
+        <a href="/vip" class="nav-item">⭐ VIP</a>
+        <a href="/team" class="nav-item">📊 Team</a>
+        <a href="/profile" class="nav-item">👤 Me</a>
+    </div>
+</body>
+</html>
