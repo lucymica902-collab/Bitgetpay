@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bitgetpay - TRC20 Payment Gateway</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-bottom: 20px; }
+        .wallet-box { background: #eef2f7; padding: 12px; border-radius: 5px; word-break: break-all; font-weight: bold; text-align: center; color: #007bff; margin-bottom: 20px; font-size: 14px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        input, button { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
+        button:hover { background: #218838; }
+        .success-msg { color: green; text-align: center; font-weight: bold; margin-bottom: 15px; }
+        .admin-link { text-align: center; margin-top: 10px; }
+        .admin-link a { color: #007bff; text-decoration: none; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Bitgetpay Deposit</h2>
+        
+        <% if (success) { %>
+            <div class="success-msg">Payment submitted successfully! Waiting for admin approval.</div>
+        <% } %>
+
+        <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 5px;">Send USDT (TRC20) to this address:</p>
+        <div class="wallet-box"><%= wallet %></div>
+
+        <form action="/submit-payment" method="POST" enctype="multipart/form-data">
+            <label>Your Username / ID</label>
+            <input type="text" name="username" required placeholder="Enter your name">
+
+            <label>Amount (USDT)</label>
+            <input type="text" name="amount" required placeholder="e.g. 50">
+
+            <label>Transaction ID (TXID)</label>
+            <input type="text" name="txid" required placeholder="Enter TRC20 TXID">
+
+            <label>Upload Screenshot</label>
+            <input type="file" name="screenshot" accept="image/*" required>
+
+            <button type="submit">Submit Payment</button>
+        </form>
+
+        <div class="admin-link">
+            <a href="/admin-login">Admin Login</a>
+        </div>
+    </div>
+</body>
+</html>
