@@ -3,51 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bitgetpay - TRC20 Payment Gateway</title>
+    <title>ShowPay Dashboard</title>
     <style>
-        body { font-family: Arial, sans-serif; background: #f4f6f9; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-        .container { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        h2 { text-align: center; color: #333; margin-bottom: 20px; }
-        .wallet-box { background: #eef2f7; padding: 12px; border-radius: 5px; word-break: break-all; font-weight: bold; text-align: center; color: #007bff; margin-bottom: 20px; font-size: 14px; }
-        label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
-        input, button { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; font-size: 16px; font-weight: bold; cursor: pointer; }
-        button:hover { background: #218838; }
-        .success-msg { color: green; text-align: center; font-weight: bold; margin-bottom: 15px; }
-        .admin-link { text-align: center; margin-top: 10px; }
-        .admin-link a { color: #007bff; text-decoration: none; font-size: 14px; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f7fc; margin: 0; padding-bottom: 70px; color: #333; }
+        .header { background: #0066ff; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 18px; font-weight: bold; }
+        .notice-box { background: #1a2536; color: white; margin: 15px; padding: 12px; border-radius: 10px; font-size: 12px; border: 1px solid #ffcc00; }
+        .notice-title { color: #ffcc00; font-weight: bold; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .ratio-card { background: white; margin: 15px; padding: 15px; border-radius: 12px; display: flex; justify-content: space-between; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .ratio-item { width: 50%; }
+        .ratio-item:first-child { border-right: 1px solid #eee; padding-right: 15px; }
+        .ratio-title { font-size: 13px; color: #666; }
+        .ratio-value { font-size: 18px; font-weight: bold; color: #0066ff; margin-top: 5px; }
+        .ratio-sub { font-size: 11px; color: #888; margin-top: 2px; }
+        .topup-btn { display: block; background: #0066ff; color: white; text-align: center; margin: 15px; padding: 14px; border-radius: 10px; font-size: 16px; font-weight: bold; text-decoration: none; box-shadow: 0 4px 12px rgba(0,102,255,0.3); }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 15px; }
+        .stat-card { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .stat-label { font-size: 12px; color: #666; display: flex; justify-content: space-between; }
+        .stat-value { font-size: 16px; font-weight: bold; color: #222; margin-top: 8px; }
+        
+        /* Bottom Navigation Bar */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); }
+        .nav-item { text-align: center; text-decoration: none; color: #666; font-size: 11px; }
+        .nav-item div { font-size: 18px; margin-bottom: 2px; }
+        .nav-item.active { color: #0066ff; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Bitgetpay Deposit</h2>
-        
-        <% if (success) { %>
-            <div class="success-msg">Payment submitted successfully! Waiting for admin approval.</div>
-        <% } %>
 
-        <p style="font-size: 13px; color: #666; text-align: center; margin-bottom: 5px;">Send USDT (TRC20) to this address:</p>
-        <div class="wallet-box"><%= wallet %></div>
+    <div class="header">
+        <span>ShowPay</span>
+        <span style="font-size: 20px;">💬</span>
+    </div>
 
-        <form action="/submit-payment" method="POST" enctype="multipart/form-data">
-            <label>Your Username / ID</label>
-            <input type="text" name="username" required placeholder="Enter your name">
+    <div class="notice-box">
+        <div class="notice-title">⚠️ SECURITY ALERT / ANTI-SCAM NOTICE</div>
+        <div>• Our WhatsApp is for order inquiries only.<br>• Official announcements via system.<br>• Please take screenshot and contact support for verification.</div>
+    </div>
 
-            <label>Amount (USDT)</label>
-            <input type="text" name="amount" required placeholder="e.g. 50">
-
-            <label>Transaction ID (TXID)</label>
-            <input type="text" name="txid" required placeholder="Enter TRC20 TXID">
-
-            <label>Upload Screenshot</label>
-            <input type="file" name="screenshot" accept="image/*" required>
-
-            <button type="submit">Submit Payment</button>
-        </form>
-
-        <div class="admin-link">
-            <a href="/admin-login">Admin Login</a>
+    <div class="ratio-card">
+        <div class="ratio-item">
+            <div class="ratio-title">USDT Ratio</div>
+            <div class="ratio-value">1 USDT ≈ 108.12 INR</div>
+            <div class="ratio-sub">Bonus ratio: 2%</div>
+        </div>
+        <div class="ratio-item" style="padding-left: 15px;">
+            <div class="ratio-title">INR Bonus Ratio</div>
+            <div class="ratio-value" style="color: #ff9900;">4%</div>
         </div>
     </div>
+
+    <a href="/deposit" class="topup-btn">Top up</a>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Balance <span>›</span></div>
+            <div class="stat-value">2,462.72</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Today Received <span>›</span></div>
+            <div class="stat-value">0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Top up Bonus <span>›</span></div>
+            <div class="stat-value">1,195.27</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Team Commission <span>›</span></div><div class="stat-value">1,731.05</div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <div class="bottom-nav">
+        <a href="/" class="nav-item active">
+            <div>🏠</div>Home
+        </a>
+        <a href="/deposit" class="nav-item">
+            <div>🔄</div>Deposit
+        </a>
+        <a href="/profile" class="nav-item">
+            <div>💼</div>UPI/Bank
+        </a>
+        <a href="/team" class="nav-item">
+            <div>📊</div>Team
+        </a>
+        <a href="/logout" class="nav-item">
+            <div>👤</div>Me
+        </a>
+    </div>
+
 </body>
 </html>
