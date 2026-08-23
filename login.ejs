@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BitGetPay - Admin Login</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .login-card { width: 100%; max-width: 380px; background: #1e293b; padding: 30px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); border: 1px solid #334155; }
+        h2 { text-align: center; color: #38bdf8; margin-bottom: 20px; }
+        .error { color: #ef4444; background: rgba(239, 68, 68, 0.1); padding: 10px; border-radius: 6px; text-align: center; margin-bottom: 15px; font-size: 13px; border: 1px solid rgba(239, 68, 68, 0.2); }
+        label { display: block; margin-top: 12px; font-size: 13px; color: #cbd5e1; font-weight: 600; }
+        input { width: 100%; padding: 12px; margin-top: 5px; background: #0f172a; border: 1px solid #334155; color: white; border-radius: 6px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; margin-top: 20px; background: #2563eb; color: white; border: none; cursor: pointer; font-size: 15px; font-weight: bold; border-radius: 6px; }
+        button:hover { background: #1d4ed8; }
+        .back { text-align: center; margin-top: 15px; font-size: 13px; }
+        .back a { color: #94a3b8; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <h2>Admin Portal</h2>
+        <% if (error) { %>
+            <div class="error">Invalid Username or Password!</div>
+        <% } %>
+        <form action="/admin-login" method="POST">
+            <label>Username:</label>
+            <input type="text" name="username" placeholder="Enter admin username" required>
+
+            <label>Password:</label>
+            <input type="password" name="password" placeholder="Enter admin password" required>
+
+            <button type="submit">Login</button>
+        </form>
+        <div class="back">
+            <a href="/">← Back to Website</a>
+        </div>
+    </div>
+</body>
+</html>
