@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team - Bitgetpay</title>
+    <style>
+        body { font-family: sans-serif; background: #f4f7fc; margin: 0; padding-bottom: 70px; }
+        .header { background: #0066ff; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
+        .card { background: white; margin: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .ref-box { background: #eef2ff; padding: 10px; border-radius: 8px; font-weight: bold; color: #0066ff; margin: 10px 0; word-break: break-all; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
+        .nav-item { text-align: center; text-decoration: none; color: #666; font-size: 11px; }
+        .nav-item.active { color: #0066ff; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="header">Invite Team</div>
+
+    <div class="card">
+        <h3>Your Referral Link</h3>
+        <div class="ref-box">https://bitgetpay.onrender.com/register?ref=<%= user.referral_code %></div>
+        <p style="font-size: 13px; color: #666;">Invite your friends. When they register and recharge, you get instant bonus rewards (e.g. 25 / 50 USDT commission)!</p>
+    </div>
+
+    <div class="card">
+        <h3>My Team Members (<%= myTeam.length %>)</h3>
+        <% if(myTeam.length === 0) { %>
+            <p style="font-size: 13px; color: #888;">No team members yet. Share your link!</p>
+        <% } else { %>
+            <% myTeam.forEach(member => { %>
+                <div style="padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px;">
+                    📱 Phone: <b><%= member.phone %></b>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="/" class="nav-item">🏠 Home</a>
+        <a href="/deposit" class="nav-item">🔄 Deposit</a>
+        <a href="/vip" class="nav-item">⭐ VIP</a>
+        <a href="/team" class="nav-item active">📊 Team</a>
+        <a href="/profile" class="nav-item">👤 Me</a>
+    </div>
+</body>
+</html>
