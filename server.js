@@ -1,7 +1,9 @@
+bitgetpay:
 const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
 const sqlite3 = require('sqlite3').verbose();
 
 const app = express();
@@ -14,9 +16,10 @@ const ADMIN_PASSWORD = "Bitpay@02";
 // Middleware setup
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
-app.use(express.static('public'));
-app.use('/uploads', express.static('uploads'));
+app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
     secret: 'bitgetpay_super_secret_key',
@@ -24,8 +27,15 @@ app.use(session({
     saveUninitialized: true
 }));
 
-// Database Connection & Table Creation
-const db = new sqlite3.Database('./database.db', (err) => {
+// Ensure uploads folder exists
+const uploadDir = path.join(__dirname, 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// Database Connection & Table Creation (Using absolute path)
+const dbPath = path.join(__dirname, 'database.db');
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) console.error('Database opening error: ', err.message);
     else console.log('Connected to SQLite Database.');
 });
@@ -43,7 +53,7 @@ db.run(`CREATE TABLE IF NOT EXISTS transactions (
 // File Upload Setup (Multer)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        cb(null, 'uploads/');
+        cb(null, uploadDir);
     },
     filename: (req, file, cb) => {
         cb(null, Date.now() + path.extname(file.originalname));
@@ -61,7 +71,7 @@ app.post('/submit-payment', upload.single('screenshot'), (req, res) => {
     const screenshot = req.file ? req.file.filename : '';
     const date = new Date().toLocaleString();
 
-    const query = `INSERT INTO transactions (username, amount, txid, screenshot, date) VALUES (?, ?, ?, ?, ?)`;
+    const query = INSERT INTO transactions (username, amount, txid, screenshot, date) VALUES (?, ?, ?, ?, ?);
     db.run(query, [username, amount, txid, screenshot, date], (err) => {
         if (err) {
             console.error(err.message);
@@ -123,6 +133,8 @@ app.get('/admin-logout', (req, res) => {
 
 // Server Listen
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, '0.0.0.0', () => {
+app.listen(PORT, '0.0.0.
+
+0', () => {
     console.log(`BitGetPay Server is running on port ${PORT}`);
 });
