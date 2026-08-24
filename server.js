@@ -14,7 +14,6 @@ if (!fs.existsSync(settingsFile)) {
     fs.writeFileSync(settingsFile, JSON.stringify({
         trc_address: "TRjGbgMkRbbhzdjXU1QMCN4AM1BrtfnG5B",
         usdt_rate: "108.12",
-        support_link: "https://t.me/your_telegram_username",
         vip_levels: [
             { level: "Level - I", price: "10", daily: "1.5", days: "49" },
             { level: "Level - II", price: "50", daily: "8.0", days: "49" },
@@ -111,7 +110,8 @@ app.post('/login', (req, res) => {
 app.get('/logout', (req, res) => { req.session.user = null; res.redirect('/login'); });
 
 app.get('/', (req, res) => {
-    if (!req.session.user) return res.redirect('/login');let users = getUsers();
+    if (!req.session.user) return res.redirect('/login');
+    let users = getUsers();
     req.session.user = users.find(u => u.id === req.session.user.id) || req.session.user;
     res.render('index', { user: req.session.user, settings: getSettings() });
 });
@@ -174,7 +174,7 @@ app.get('/profile', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
     req.session.user = users.find(u => u.id === req.session.user.id);
-    res.render('profile', { user: req.session.user, settings: getSettings() });
+    res.render('profile', { user: req.session.user });
 });
 
 app.get('/admin-login', (req, res) => { res.render('admin-login', { error: false }); });
@@ -193,11 +193,10 @@ app.get('/admin', (req, res) => {
 
 app.post('/admin/settings', (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
-    const { trc_address, usdt_rate, support_link, v_price, v_daily, v_days } = req.body;
+    const { trc_address, usdt_rate, v_price, v_daily, v_days } = req.body;
     let settings = getSettings();
     settings.trc_address = trc_address;
     settings.usdt_rate = usdt_rate;
-    settings.support_link = support_link;
     if (v_price && Array.isArray(v_price)) {
         for (let i = 0; i < settings.vip_levels.length; i++) {
             settings.vip_levels[i].price = v_price[i];
@@ -214,7 +213,8 @@ app.post('/admin/verify/:id', (req, res) => {
     let txs = getTransactions();
     let tx = txs.find(t => t.id == req.params.id);
     if (tx && tx.status === 'Pending') {
-        tx.status = 'Approved & Verified';saveTransactions(txs);
+        tx.status = 'Approved & Verified';
+        saveTransactions(txs);
 
         let users = getUsers();
         let user = users.find(u => u.phone === tx.phone);
