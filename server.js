@@ -178,6 +178,51 @@ app.get('/profile', (req, res) => {
     res.render('profile', { user: req.session.user, settings: getSettings() });
 });
 
+// --- Withdrawal & Bank Card Routes ---
+app.get('/withdraw', (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    let users = getUsers();
+    let currentUser = users.find(u => u.id === req.session.user.id);
+    req.session.user = currentUser;
+    res.render('withdraw', { user: currentUser, success: req.query.success, error: req.query.error === 'true' });
+});
+
+app.post('/save-bank', (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    const { fullname, bank_name, account_no, ifsc_upi } = req.body;
+    let users = getUsers();
+    let user = users.find(u => u.id === req.session.user.id);
+    user.bank_details = { fullname, bank_name, account_no, ifsc_upi };
+    saveUsers(users);
+    req.session.user = user;
+    res.redirect('/withdraw?success=bank');
+});
+
+app.post('/submit-withdraw', (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    const { amount, method, details } = req.body;
+    let users = getUsers();
+    let user = users.find(u => u.id === req.session.user.id);
+    let withdrawAmount = parseFloat(amount);
+    if (user.balance >= withdrawAmount && withdrawAmount > 0) {
+        user.balance -= withdrawAmount;
+        if (!user.withdraw_history) user.withdraw_history = [];
+        user.withdraw_history.unshift({
+            id: Date.now(),
+            amount: withdrawAmount,
+            method,
+            details,
+            date: new Date().toLocaleString(),
+            status: 'Pending'
+        });
+        saveUsers(users);
+        req.session.user = user;
+        res.redirect('/withdraw?success=true');
+    } else {
+        res.redirect('/withdraw?error=true');
+    }
+});
+
 app.get('/admin-login', (req, res) => { res.render('admin-login', { error: false }); });
 app.post('/admin-login', (req, res) => {
     const { username, password } = req.body;
@@ -217,25 +262,20 @@ app.post('/admin/verify/:id', (req, res) => {
     if (tx && tx.status === 'Pending') {
         tx.status = 'Approved & Verified';
         saveTransactions(txs);
-
         let users = getUsers();
         let user = users.find(u => u.phone === tx.phone);
         if (user) {
             user.balance += tx.amount;
             if (!user.deposit_history) user.deposit_history = [];
             user.deposit_history.push({ amount: tx.amount, date: tx.date, txid: tx.txid });
-
             if (user.referred_by) {
                 let referrerA = users.find(u => u.referral_code === user.referred_by);
                 if (referrerA) {
                     referrerA.team_commission += (tx.amount * 0.003);
                     if (tx.amount >= 100) referrerA.balance += 5;
-
                     if (referrerA.referred_by) {
                         let referrerB = users.find(u => u.referral_code === referrerA.referred_by);
-                        if (referrerB) {
-                            referrerB.team_commission += (tx.amount * 0.001);
-                        }
+                        if (referrerB) { referrerB.team_commission += (tx.amount * 0.001); }
                     }
                 }
             }
@@ -250,6 +290,38 @@ app.post('/admin/reject/:id', (req, res) => {
     let txs = getTransactions();
     let tx = txs.find(t => t.id == req.params.id);
     if (tx) { tx.status = 'Rejected'; saveTransactions(txs); }
+    res.redirect('/admin');
+});
+
+// Admin: Approve Withdrawal
+app.post('/admin/withdraw/approve/:id', (req, res) => {
+    if (!req.session.admin) return res.redirect('/admin-login');
+    let users = getUsers();
+    for (let user of users) {
+        if (user.withdraw_history) {
+            let tx = user.withdraw_history.find(t => t.id == req.params.id);
+            if (tx) { tx.status = 'Approved'; break; }
+        }
+    }
+    saveUsers(users);
+    res.redirect('/admin');
+});
+
+// Admin: Reject Withdrawal & Refund
+app.post('/admin/withdraw/reject/:id', (req, res) => {
+    if (!req.session.admin) return res.redirect('/admin-login');
+    let users = getUsers();
+    for (let user of users) {
+        if (user.withdraw_history) {
+            let tx = user.withdraw_history.find(t => t.id == req.params.id);
+            if (tx && tx.status === 'Pending') {
+                tx.status = 'Rejected';
+                user.balance += tx.amount;
+                break;
+            }
+        }
+    }
+    saveUsers(users);
     res.redirect('/admin');
 });
 
