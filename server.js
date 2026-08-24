@@ -14,18 +14,16 @@ if (!fs.existsSync(settingsFile)) {
     fs.writeFileSync(settingsFile, JSON.stringify({
         trc_address: "TRjGbgMkRbbhzdjXU1QMCN4AM1BrtfnG5B",
         usdt_rate: "108.12",
-        bonus_ratio: "2",
         vip_levels: [
-            { level: "Level - I", price: "10", daily: "1.5", days: "49", desc: "USDT Invest for 49 days" },
-            { level: "Level - II", price: "50", daily: "8.0", days: "49", desc: "USDT Invest for 49 days" },
-            { level: "Level - III", price: "100", daily: "18.0", days: "49", desc: "USDT Invest for 49 days" },
-            { level: "Level - IV", price: "500", daily: "95.0", days: "49", desc: "USDT Invest for 49 days" },
-            { level: "Level - V", price: "1000", daily: "200.0", days: "49", desc: "USDT Invest for 49 days" }
+            { level: "Level - I", price: "10", daily: "1.5", days: "49" },
+            { level: "Level - II", price: "50", daily: "8.0", days: "49" },
+            { level: "Level - III", price: "100", daily: "18.0", days: "49" },
+            { level: "Level - IV", price: "500", daily: "95.0", days: "49" },
+            { level: "Level - V", price: "1000", daily: "200.0", days: "49" }
         ]
     }, null, 2));
 }
 
-// Middleware
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -34,7 +32,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
-    secret: 'bitgetpay_secret_key_2026',
+    secret: 'bitgetpay_secure_key_2026',
     resave: false,
     saveUninitialized: true
 }));
@@ -75,10 +73,9 @@ function saveTransactions(txs) {
     fs.writeFileSync(dbFile, JSON.stringify(txs, null, 2));
 }
 
-// User Routes
+// Routes
 app.get('/register', (req, res) => {
-    const ref = req.query.ref || '';
-    res.render('register', { error: null, ref });
+    res.render('register', { error: null, ref: req.query.ref || '' });
 });
 
 app.post('/register', (req, res) => {
@@ -89,9 +86,15 @@ app.post('/register', (req, res) => {
     }
     const myReferralCode = 'BP' + Math.floor(100000 + Math.random() * 900000);
     users.push({
-        id: Date.now(), phone, password, balance: 0.00,
-        referral_code: myReferralCode, referred_by: referral_code || '',
-        upi: '', bank_details: '', qr_code: '', digital_rupee: ''
+        id: Date.now(),
+        phone,
+        password,
+        balance: 0.00,
+        team_commission: 0.00,
+        referral_code: myReferralCode,
+        referred_by: referral_code || '',
+        investments: [],
+        deposit_history: []
     });
     saveUsers(users);
     res.redirect('/login');
@@ -107,61 +110,83 @@ app.post('/login', (req, res) => {
 });
 app.get('/logout', (req, res) => { req.session.user = null; res.redirect('/login'); });
 
+// Home
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
     req.session.user = users.find(u => u.id === req.session.user.id) || req.session.user;
-    res.render('index', { user: req.session.user });
+    res.render('index', { user: req.session.user, settings: getSettings() });
 });
 
+// Deposit
 app.get('/deposit', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    const settings = getSettings();
-    const success = req.query.success === 'true';
-    res.render('deposit', { user: req.session.user, settings, success });
+    res.render('deposit', { user: req.session.user, settings: getSettings(), success: req.query.success === 'true' });
 });
 
 app.post('/submit-deposit', upload.single('screenshot'), (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     const { amount, txid } = req.body;
     let txs = getTransactions();
-    txs.unshift({ id: Date.now(), phone: req.session.user.phone, amount, txid, screenshot: req.file ? req.file.filename : '', date: new Date().toLocaleString(), status: 'Pending' });
+    txs.unshift({
+        id: Date.now(),
+        phone: req.session.user.phone,
+        amount: parseFloat(amount),
+        txid,
+        screenshot: req.file ? req.file.filename : '',
+        date: new Date().toLocaleString(),
+        status: 'Pending'
+    });
     saveTransactions(txs);
     res.redirect('/deposit?success=true');
 });
 
-// VIP Page - Dynamic from Admin Settings
+// VIP Invest
 app.get('/vip', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    const settings = getSettings();
-    res.render('vip', { user: req.session.user, vip_levels: settings.vip_levels || [] });
+    res.render('vip', { user: req.session.user, settings: getSettings(), success: req.query.success === 'true', error: req.query.error === 'true' });
 });
 
+app.post('/buy-vip', (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    const { level, price, daily, days } = req.body;
+    let users = getUsers();
+    let user = users.find(u => u.id === req.session.user.id);
+
+    if (user.balance >= parseFloat(price)) {
+        user.balance -= parseFloat(price);
+        if (!user.investments) user.investments = [];
+        user.investments.push({
+            level,
+            price,
+            daily,
+            days,
+            date: new Date().toLocaleString()
+        });
+        saveUsers(users);
+        req.session.user = user;
+        res.redirect('/vip?success=true');
+    } else {
+        res.redirect('/vip?error=true');
+    }
+});
+
+// Team
 app.get('/team', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
-    const myTeam = users.filter(u => u.referred_by === req.session.user.referral_code);
-    res.render('team', { user: req.session.user, myTeam });
+    const teamA = users.filter(u => u.referred_by === req.session.user.referral_code);
+    let teamA_codes = teamA.map(u => u.referral_code);
+    const teamB = users.filter(u => teamA_codes.includes(u.referred_by));
+    res.render('team', { user: req.session.user, teamA, teamB });
 });
 
+// Profile / Me
 app.get('/profile', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    res.render('profile', { user: req.session.user, success: req.query.success === 'true' });
-});
-
-app.post('/profile', upload.single('qr_code'), (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
-    let index = users.findIndex(u => u.id === req.session.user.id);
-    if (index !== -1) {
-        users[index].upi = req.body.upi || users[index].upi;
-        users[index].digital_rupee = req.body.digital_rupee || users[index].digital_rupee;
-        users[index].bank_details = req.body.bank_details || users[index].bank_details;
-        if (req.file) users[index].qr_code = req.file.filename;
-        saveUsers(users);
-        req.session.user = users[index];
-    }
-    res.redirect('/profile?success=true');
+    req.session.user = users.find(u => u.id === req.session.user.id);
+    res.render('profile', { user: req.session.user });
 });
 
 // Admin Routes
@@ -179,17 +204,12 @@ app.get('/admin', (req, res) => {
     res.render('admin', { transactions: getTransactions(), users: getUsers(), settings: getSettings() });
 });
 
-// Update Settings & VIP Plans from Admin
 app.post('/admin/settings', (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
-    const { trc_address, usdt_rate, bonus_ratio, v_price, v_daily, v_days } = req.body;
-    
+    const { trc_address, usdt_rate, v_price, v_daily, v_days } = req.body;
     let settings = getSettings();
     settings.trc_address = trc_address;
     settings.usdt_rate = usdt_rate;
-    settings.bonus_ratio = bonus_ratio;
-
-    // Update VIP levels dynamically if provided
     if (v_price && Array.isArray(v_price)) {
         for (let i = 0; i < settings.vip_levels.length; i++) {
             settings.vip_levels[i].price = v_price[i];
@@ -201,15 +221,41 @@ app.post('/admin/settings', (req, res) => {
     res.redirect('/admin');
 });
 
+// Approve Transaction & Team Commission / Bonus Logic
 app.post('/admin/verify/:id', (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     let txs = getTransactions();
     let tx = txs.find(t => t.id == req.params.id);
     if (tx && tx.status === 'Pending') {
-        tx.status = 'Approved & Verified';saveTransactions(txs);
+        tx.status = 'Approved & Verified';
+        saveTransactions(txs);
+
         let users = getUsers();
         let user = users.find(u => u.phone === tx.phone);
-        if (user) { user.balance += parseFloat(tx.amount); saveUsers(users); }
+        if (user) {
+            user.balance += tx.amount;
+            if (!user.deposit_history) user.deposit_history = [];
+            user.deposit_history.push({ amount: tx.amount, date: tx.date, txid: tx.txid });
+
+            // Referral / Team Commission (Level A: 0.3%, Level B: 0.1%, Invite Bonus if >= 100 USDT)
+            if (user.referred_by) {
+                let referrerA = users.find(u => u.referral_code === user.referred_by);
+                if (referrerA) {
+                    let commA = tx.amount * 0.003; // 0.3%
+                    referrerA.team_commission += commA;
+                    if (tx.amount >= 100) referrerA.balance += 5; // 5 USDT per invite bonus if recharge >= 100
+
+                    if (referrerA.referred_by) {
+                        let referrerB = users.find(u => u.referral_code === referrerA.referred_by);
+                        if (referrerB) {
+                            let commB = tx.amount * 0.001; // 0.1%
+                            referrerB.team_commission += commB;
+                        }
+                    }
+                }
+            }
+            saveUsers(users);
+        }
     }
     res.redirect('/admin');
 });
