@@ -23,11 +23,11 @@
         <p>🔑 Referral Code / ID: <b style="color: #f0b90b;"><%= user.referral_code %></b></p>
     </div>
 
-    <!-- Customer Support Section with @lucy9029 -->
+    <!-- Customer Support Section (Controlled by Admin) -->
     <div class="card" style="text-align: center;">
         <h3>Customer Support</h3>
         <p style="font-size: 12px; color: #aaa;">Kisi bhi samasya ke liye hamari support team se sampark karein.</p>
-        <a href="https://t.me/lucy9029" target="_blank" class="support-btn">💬 Chat on Telegram (@lucy9029)</a>
+        <a href="<%= settings.support_link %>" target="_blank" class="support-btn">💬 Chat on Telegram Support</a>
     </div>
 
     <div class="card">
