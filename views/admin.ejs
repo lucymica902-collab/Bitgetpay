@@ -3,124 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard - Bitget</title>
+    <title>Admin Panel - Bitget</title>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #1f1f1f; padding: 15px 20px; border-radius: 8px; border: 1px solid #333; }
-        .card { background: #1f1f1f; margin-top: 20px; padding: 20px; border-radius: 8px; border: 1px solid #333; }
-        input { padding: 10px; margin: 5px 0 12px 0; width: 100%; border: 1px solid #444; border-radius: 6px; box-sizing: border-box; background: #2a2a2a; color: white; }
-        button { padding: 10px 15px; background: #00ffcc; color: black; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .reject-btn { background: #ff4d4d; color: white; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #333; padding: 10px; text-align: left; font-size: 13px; }
-        th { background: #2a2a2a; color: #f0b90b; }
-        img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
-        .logout { background: #ff4d4d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: bold; }
+        .container { max-width: 1000px; margin: auto; }
+        .card { background: #1f1f1f; padding: 20px; border-radius: 8px; border: 1px solid #333; margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; background: #2a2a2a; color: white; font-size: 14px; text-align: left; }
+        th, td { padding: 10px; border: 1px solid #444; }
+        th { background: #333; }
+        input, select { padding: 10px; margin: 5px 0 10px 0; width: 100%; border: 1px solid #444; border-radius: 5px; background: #222; color: white; box-sizing: border-box; }
+        button { padding: 10px 15px; background: #f0b90b; color: black; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
+        .logout { float: right; background: #ef4444; color: white; text-decoration: none; padding: 8px 15px; border-radius: 5px; font-size: 14px; }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h2>Admin Dashboard</h2>
+    <div class="container">
         <a href="/admin-logout" class="logout">Logout</a>
-    </div>
+        <h2>Admin Dashboard</h2>
 
-    <!-- Settings, Support Link & VIP Control Card -->
-    <div class="card">
-        <h3>Control Deposit Settings, Support Link & VIP Levels</h3>
-        <form action="/admin/settings" method="POST">
-            <label><b>TRC20 Wallet Address</b></label>
-            <input type="text" name="trc_address" value="<%= settings.trc_address %>" required>
+        <!-- Global Settings & VIP Rates -->
+        <div class="card">
+            <h3>Platform Settings & VIP Levels</h3>
+            <form action="/admin/settings" method="POST">
+                <label><b>TRC20 Deposit Address</b></label>
+                <input type="text" name="trc_address" value="<%= settings.trc_address %>" required>
 
-            <label><b>USDT to INR Rate</b></label>
-            <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>" required>
+                <label><b>USDT Rate (INR/USD)</b></label>
+                <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>" required>
 
-            <label><b>Telegram Customer Support Link</b></label>
-            <input type="text" name="support_link" value="<%= settings.support_link %>" required>
+                <label><b>Telegram Support Link</b></label>
+                <input type="text" name="support_link" value="<%= settings.support_link %>" required>
 
-            <h3 style="margin-top: 25px; color: #f0b90b; border-top: 1px solid #333; padding-top: 15px;">Manage VIP Levels (Price, Daily Return, Days)</h3>
-            <% settings.vip_levels.forEach((vip) => { %>
-                <div style="background: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #444;">
-                    <b style="color: #f0b90b; font-size: 15px;"><%= vip.level %></b><br><br>
-                    <label>Price (USDT):</label>
-                    <input type="text" name="v_price" value="<%= vip.price %>" required>
-                    
-                    <label>Daily Return (USDT):</label>
-                    <input type="text" name="v_daily" value="<%= vip.daily %>" required>
-                    
-                    <label>Time Period (Days):</label>
-                    <input type="text" name="v_days" value="<%= vip.days %>" required>
-                </div>
-            <% }) %>
+                <h4 style="margin-top: 20px;">Manage VIP Levels</h4>
+                <% settings.vip_levels.forEach((v, index) => { %>
+                    <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                        <input type="text" value="<%= v.level %>" disabled style="width: 25%;">
+                        <input type="text" name="v_price" value="<%= v.price %>" placeholder="Price" style="width: 25%;">
+                        <input type="text" name="v_daily" value="<%= v.daily %>" placeholder="Daily Income" style="width: 25%;">
+                        <input type="text" name="v_days" value="<%= v.days %>" placeholder="Days" style="width: 25%;">
+                    </div>
+                <% }) %>
 
-            <button type="submit" style="width: 100%; padding: 14px; background: #f0b90b; color: black; font-size: 16px; margin-top: 10px;">Save All Settings & VIP Plans</button>
-        </form>
-    </div>
+                <button type="submit" style="margin-top: 10px; background: #22c55e; color: white;">Save Settings</button>
+            </form>
+        </div>
 
-    <!-- Transactions Control Card -->
-    <div class="card">
-        <h3>User Deposits & Verification</h3>
-        <table>
-            <tr>
-                <th>Date</th>
-                <th>User Phone</th>
-                <th>Amount</th>
-                <th>TXID</th>
-                <th>Screenshot</th>
-                <th>Status</th>
-                <th>Action</th>
-            </tr>
-            <% if(transactions.length === 0) { %>
-                <tr><td colspan="7" style="text-align: center; color: #aaa;">No transactions found.</td></tr>
-            <% } else { %>
+        <!-- Deposit Verification Requests -->
+        <div class="card">
+            <h3>Deposit Requests</h3>
+            <table>
+                <tr>
+                    <th>Phone</th>
+                    <th>Amount</th>
+                    <th>TXID & Screenshot</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
                 <% transactions.forEach(tx => { %>
                     <tr>
-                        <td><%= tx.date %></td><td><%= tx.phone %></td>
-                        <td><b><%= tx.amount %> USDT</b></td>
-                        <td><%= tx.txid %></td>
+                        <td><%= tx.phone %></td>
+                        <td><%= tx.amount %> USDT</td>
                         <td>
-                            <% if(tx.screenshot) { %>
-                                <a href="/uploads/<%= tx.screenshot %>" target="_blank"><img src="/uploads/<%= tx.screenshot %>"></a>
-                            <% } else { %> No Image <% } %>
+                            TXID: <%= tx.txid %><br>
+                            <% if (tx.screenshot) { %>
+                                <a href="/uploads/<%= tx.screenshot %>" target="_blank" style="color: #00ffcc;">View Screenshot</a>
+                            <% } %>
                         </td>
-                        <td><b><%= tx.status %></b></td>
+                        <td style="color: <%= tx.status == 'Approved & Verified' ? '#22c55e' : (tx.status == 'Rejected' ? '#ef4444' : '#f0b90b') %>;"><%= tx.status %></td>
                         <td>
-                            <% if(tx.status === 'Pending') { %>
+                            <% if (tx.status === 'Pending') { %>
                                 <form action="/admin/verify/<%= tx.id %>" method="POST" style="display:inline;">
-                                    <button type="submit">Approve</button>
+                                    <button type="submit" style="background: #22c55e; color: white; padding: 5px 10px;">Approve</button>
                                 </form>
-                                <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline; margin-left: 5px;">
-                                    <button type="submit" class="reject-btn">Reject</button>
+                                <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" style="background: #ef4444; color: white; padding: 5px 10px;">Reject</button>
                                 </form>
                             <% } else { %>
-                                Done
+                                <span>Done</span>
                             <% } %>
                         </td>
                     </tr>
                 <% }) %>
-            <% } %>
-        </table>
-    </div>
+            </table>
+        </div>
 
-    <!-- Registered Users List -->
-    <div class="card">
-        <h3>Registered Users (<%= users.length %>)</h3>
-        <table>
-            <tr>
-                <th>Phone Number</th>
-                <th>User ID</th>
-                <th>Balance</th>
-                <th>Team Commission</th>
-            </tr>
-            <% users.forEach(u => { %>
+        <!-- Withdrawal Requests & Bank Cards -->
+        <div class="card">
+            <h3>User Withdrawal Requests & Bank Cards</h3>
+            <table>
                 <tr>
-                    <td><%= u.phone %></td>
-                    <td><%= u.referral_code %></td>
-                    <td><b><%= u.balance.toFixed(2) %> USDT</b></td>
-                    <td><b><%= u.team_commission.toFixed(2) %> USDT</b></td>
+                    <th>Phone</th>
+                    <th>Amount</th>
+                    <th>Method & Details / Bank Card</th>
+                    <th>Status</th>
+                    <th>Action</th>
                 </tr>
-            <% }) %>
-        </table>
+                <% users.forEach(u => { %>
+                    <% if (u.withdraw_history) { %>
+                        <% u.withdraw_history.forEach(tx => { %>
+                            <tr>
+                                <td><%= u.phone %></td>
+                                <td><%= tx.amount %> USDT</td>
+                                <td>
+                                    <b><%= tx.method %></b>: <%= tx.details %>
+                                    <% if (u.bank_details) { %>
+                                        <br><small style="color: #00ffcc;">Card: <%= u.bank_details.fullname %> | <%= u.bank_details.bank_name %> | <%= u.bank_details.account_no %></small>
+                                    <% } %>
+                                </td>
+                                <td style="color: <%= tx.status == 'Approved' ? '#22c55e' : (tx.status == 'Rejected' ? '#ef4444' : '#f0b90b') %>;"><%= tx.status %></td>
+                                <td>
+                                    <% if (tx.status === 'Pending') { %>
+                                        <form action="/admin/withdraw/approve/<%= tx.id %>" method="POST" style="display:inline;">
+                                            <button type="submit" style="background: #22c55e; color: white; padding: 5px 10px;">Approve</button>
+                                        </form>
+                                        <form action="/admin/withdraw/reject/<%= tx.id %>" method="POST" style="display:inline;">
+                                            <button type="submit" style="background: #ef4444; color: white; padding: 5px 10px;">Reject</button>
+                                        </form>
+                                    <% } else { %>
+                                        <span>Done</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                <% }) %>
+            </table>
+        </div>
+
+        <!-- Registered Users List -->
+        <div class="card">
+            <h3>Registered Users</h3>
+            <table>
+                <tr>
+                    <th>Phone</th>
+                    <th>Balance</th>
+                    <th>Commission</th>
+                    <th>Referral Code</th>
+                </tr>
+                <% users.forEach(u => { %>
+                    <tr>
+                        <td><%= u.phone %></td>
+                        <td><%= u.balance.toFixed(2) %> USDT</td>
+                        <td><%= u.team_commission.toFixed(2) %> USDT</td>
+                        <td><%= u.referral_code %></td>
+                    </tr>
+                <% }) %>
+            </table>
+        </div>
+
     </div>
 
 </body>
