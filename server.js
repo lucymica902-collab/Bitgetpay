@@ -14,6 +14,7 @@ if (!fs.existsSync(settingsFile)) {
     fs.writeFileSync(settingsFile, JSON.stringify({
         trc_address: "TRjGbgMkRbbhzdjXU1QMCN4AM1BrtfnG5B",
         usdt_rate: "108.12",
+        support_link: "https://t.me/your_telegram_username",
         vip_levels: [
             { level: "Level - I", price: "10", daily: "1.5", days: "49" },
             { level: "Level - II", price: "50", daily: "8.0", days: "49" },
@@ -73,7 +74,6 @@ function saveTransactions(txs) {
     fs.writeFileSync(dbFile, JSON.stringify(txs, null, 2));
 }
 
-// Routes
 app.get('/register', (req, res) => {
     res.render('register', { error: null, ref: req.query.ref || '' });
 });
@@ -110,15 +110,12 @@ app.post('/login', (req, res) => {
 });
 app.get('/logout', (req, res) => { req.session.user = null; res.redirect('/login'); });
 
-// Home
 app.get('/', (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-    let users = getUsers();
+    if (!req.session.user) return res.redirect('/login');let users = getUsers();
     req.session.user = users.find(u => u.id === req.session.user.id) || req.session.user;
     res.render('index', { user: req.session.user, settings: getSettings() });
 });
 
-// Deposit
 app.get('/deposit', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.render('deposit', { user: req.session.user, settings: getSettings(), success: req.query.success === 'true' });
@@ -141,7 +138,6 @@ app.post('/submit-deposit', upload.single('screenshot'), (req, res) => {
     res.redirect('/deposit?success=true');
 });
 
-// VIP Invest
 app.get('/vip', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     res.render('vip', { user: req.session.user, settings: getSettings(), success: req.query.success === 'true', error: req.query.error === 'true' });
@@ -156,13 +152,7 @@ app.post('/buy-vip', (req, res) => {
     if (user.balance >= parseFloat(price)) {
         user.balance -= parseFloat(price);
         if (!user.investments) user.investments = [];
-        user.investments.push({
-            level,
-            price,
-            daily,
-            days,
-            date: new Date().toLocaleString()
-        });
+        user.investments.push({ level, price, daily, days, date: new Date().toLocaleString() });
         saveUsers(users);
         req.session.user = user;
         res.redirect('/vip?success=true');
@@ -171,7 +161,6 @@ app.post('/buy-vip', (req, res) => {
     }
 });
 
-// Team
 app.get('/team', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
@@ -181,15 +170,13 @@ app.get('/team', (req, res) => {
     res.render('team', { user: req.session.user, teamA, teamB });
 });
 
-// Profile / Me
 app.get('/profile', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
     req.session.user = users.find(u => u.id === req.session.user.id);
-    res.render('profile', { user: req.session.user });
+    res.render('profile', { user: req.session.user, settings: getSettings() });
 });
 
-// Admin Routes
 app.get('/admin-login', (req, res) => { res.render('admin-login', { error: false }); });
 app.post('/admin-login', (req, res) => {
     const { username, password } = req.body;
@@ -206,10 +193,11 @@ app.get('/admin', (req, res) => {
 
 app.post('/admin/settings', (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
-    const { trc_address, usdt_rate, v_price, v_daily, v_days } = req.body;
+    const { trc_address, usdt_rate, support_link, v_price, v_daily, v_days } = req.body;
     let settings = getSettings();
     settings.trc_address = trc_address;
     settings.usdt_rate = usdt_rate;
+    settings.support_link = support_link;
     if (v_price && Array.isArray(v_price)) {
         for (let i = 0; i < settings.vip_levels.length; i++) {
             settings.vip_levels[i].price = v_price[i];
@@ -221,14 +209,12 @@ app.post('/admin/settings', (req, res) => {
     res.redirect('/admin');
 });
 
-// Approve Transaction & Team Commission / Bonus Logic
 app.post('/admin/verify/:id', (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     let txs = getTransactions();
     let tx = txs.find(t => t.id == req.params.id);
     if (tx && tx.status === 'Pending') {
-        tx.status = 'Approved & Verified';
-        saveTransactions(txs);
+        tx.status = 'Approved & Verified';saveTransactions(txs);
 
         let users = getUsers();
         let user = users.find(u => u.phone === tx.phone);
@@ -237,19 +223,16 @@ app.post('/admin/verify/:id', (req, res) => {
             if (!user.deposit_history) user.deposit_history = [];
             user.deposit_history.push({ amount: tx.amount, date: tx.date, txid: tx.txid });
 
-            // Referral / Team Commission (Level A: 0.3%, Level B: 0.1%, Invite Bonus if >= 100 USDT)
             if (user.referred_by) {
                 let referrerA = users.find(u => u.referral_code === user.referred_by);
                 if (referrerA) {
-                    let commA = tx.amount * 0.003; // 0.3%
-                    referrerA.team_commission += commA;
-                    if (tx.amount >= 100) referrerA.balance += 5; // 5 USDT per invite bonus if recharge >= 100
+                    referrerA.team_commission += (tx.amount * 0.003);
+                    if (tx.amount >= 100) referrerA.balance += 5;
 
                     if (referrerA.referred_by) {
                         let referrerB = users.find(u => u.referral_code === referrerA.referred_by);
                         if (referrerB) {
-                            let commB = tx.amount * 0.001; // 0.1%
-                            referrerB.team_commission += commB;
+                            referrerB.team_commission += (tx.amount * 0.001);
                         }
                     }
                 }
