@@ -3,37 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team - Bitgetpay</title>
+    <title>Team - Bitget</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7fc; margin: 0; padding-bottom: 70px; }
-        .header { background: #0066ff; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
-        .card { background: white; margin: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        .ref-box { background: #eef2ff; padding: 10px; border-radius: 8px; font-weight: bold; color: #0066ff; margin: 10px 0; word-break: break-all; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
-        .nav-item { text-align: center; text-decoration: none; color: #666; font-size: 11px; }
-        .nav-item.active { color: #0066ff; font-weight: bold; }
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding-bottom: 70px; }
+        .header { background: #1f1f1f; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #333; }
+        .card { background: #1f1f1f; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        .ref-box { background: #2a2a2a; padding: 10px; border-radius: 8px; font-size: 13px; color: #f0b90b; word-break: break-all; margin: 10px 0; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; }
+        .nav-item { text-align: center; text-decoration: none; color: #aaa; font-size: 11px; }
+        .nav-item.active { color: #f0b90b; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="header">Invite Team</div>
+    <div class="header">Team & Referral</div>
 
     <div class="card">
         <h3>Your Referral Link</h3>
         <div class="ref-box">https://bitgetpay.onrender.com/register?ref=<%= user.referral_code %></div>
-        <p style="font-size: 13px; color: #666;">Invite your friends. When they register and recharge, you get instant bonus rewards (e.g. 25 / 50 USDT commission)!</p>
+        <p style="font-size: 12px; color: #aaa;">Earn 5 USDT bonus on member recharge >= 100 USDT. Level A commission: 0.3%, Level B commission: 0.1%.</p>
+        <p style="font-size: 12px; color: #f0b90b;">Weekly Salary: Get 100 USDT salary when team recharges 10,000 USDT in a week.</p>
     </div>
 
     <div class="card">
-        <h3>My Team Members (<%= myTeam.length %>)</h3>
-        <% if(myTeam.length === 0) { %>
-            <p style="font-size: 13px; color: #888;">No team members yet. Share your link!</p>
-        <% } else { %>
-            <% myTeam.forEach(member => { %>
-                <div style="padding: 8px 0; border-bottom: 1px solid #eee; font-size: 13px;">
-                    📱 Phone: <b><%= member.phone %></b>
-                </div>
-            <% }) %>
-        <% } %>
+        <h3>Team Level A Members (<%= teamA.length %>)</h3>
+        <% teamA.forEach(m => { %>
+            <div style="font-size: 13px; border-bottom: 1px solid #333; padding: 6px 0;">📱 <%= m.phone %></div>
+        <% }) %>
+    </div>
+
+    <div class="card">
+        <h3>Team Level B Members (<%= teamB.length %>)</h3>
+        <% teamB.forEach(m => { %>
+            <div style="font-size: 13px; border-bottom: 1px solid #333; padding: 6px 0;">📱 <%= m.phone %></div>
+        <% }) %>
     </div>
 
     <div class="bottom-nav">
