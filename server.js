@@ -178,7 +178,7 @@ app.get('/profile', (req, res) => {
     res.render('profile', { user: req.session.user, settings: getSettings() });
 });
 
-// --- Withdrawal & Bank Card Routes ---
+// --- Withdrawal & Digital eRupee QR Routes ---
 app.get('/withdraw', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
@@ -187,12 +187,18 @@ app.get('/withdraw', (req, res) => {
     res.render('withdraw', { user: currentUser, success: req.query.success, error: req.query.error === 'true' });
 });
 
-app.post('/save-bank', (req, res) => {
+app.post('/save-bank', upload.single('qr_image'), (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    const { fullname, bank_name, account_no, ifsc_upi } = req.body;
+    const { fullname, bank_name, account_no, ifsc_upi, erupee_address } = req.body;
     let users = getUsers();
     let user = users.find(u => u.id === req.session.user.id);
-    user.bank_details = { fullname, bank_name, account_no, ifsc_upi };
+    
+    let qr_image = user.bank_details ? user.bank_details.qr_image : '';
+    if (req.file) {
+        qr_image = req.file.filename;
+    }
+
+    user.bank_details = { fullname, bank_name, account_no, ifsc_upi, erupee_address, qr_image };
     saveUsers(users);
     req.session.user = user;
     res.redirect('/withdraw?success=bank');
@@ -293,7 +299,6 @@ app.post('/admin/reject/:id', (req, res) => {
     res.redirect('/admin');
 });
 
-// Admin: Approve Withdrawal
 app.post('/admin/withdraw/approve/:id', (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     let users = getUsers();
@@ -307,7 +312,6 @@ app.post('/admin/withdraw/approve/:id', (req, res) => {
     res.redirect('/admin');
 });
 
-// Admin: Reject Withdrawal & Refund
 app.post('/admin/withdraw/reject/:id', (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     let users = getUsers();
