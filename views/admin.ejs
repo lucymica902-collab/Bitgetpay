@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Panel - Bitgetpay</title>
+    <title>Admin Dashboard - Bitget</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7fc; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; background: #0066ff; color: white; padding: 15px 20px; border-radius: 8px; }
-        .card { background: white; margin-top: 20px; padding: 20px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        input { padding: 10px; margin: 5px 0 12px 0; width: 100%; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
-        button { padding: 10px 15px; background: #28a745; color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .reject-btn { background: #dc3545; }
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding: 20px; }
+        .header { display: flex; justify-content: space-between; align-items: center; background: #1f1f1f; padding: 15px 20px; border-radius: 8px; border: 1px solid #333; }
+        .card { background: #1f1f1f; margin-top: 20px; padding: 20px; border-radius: 8px; border: 1px solid #333; }
+        input { padding: 10px; margin: 5px 0 12px 0; width: 100%; border: 1px solid #444; border-radius: 6px; box-sizing: border-box; background: #2a2a2a; color: white; }
+        button { padding: 10px 15px; background: #00ffcc; color: black; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .reject-btn { background: #ff4d4d; color: white; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: left; font-size: 13px; }
-        th { background: #f8f9fa; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; font-size: 13px; }
+        th { background: #2a2a2a; color: #f0b90b; }
         img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
-        .logout { background: #dc3545; color: white; padding: 8px 15px; text-decoration: none; border-radius: 6px; font-size: 14px; }
+        .logout { background: #ff4d4d; color: white; padding: 8px 15px; text-decoration: none; border-radius: 6px; font-size: 14px; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -35,10 +35,10 @@
             <label><b>USDT to INR Rate</b></label>
             <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>" required>
 
-            <h3 style="margin-top: 25px; color: #0066ff; border-top: 1px solid #eee; padding-top: 15px;">Manage VIP Levels (Price, Daily Return, Days)</h3>
-            <% settings.vip_levels.forEach((vip, index) => { %>
-                <div style="background: #f8f9fa; padding: 15px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #ddd;">
-                    <b style="color: #333; font-size: 15px;"><%= vip.level %></b><br><br>
+            <h3 style="margin-top: 25px; color: #f0b90b; border-top: 1px solid #333; padding-top: 15px;">Manage VIP Levels (Price, Daily Return, Days)</h3>
+            <% settings.vip_levels.forEach((vip) => { %>
+                <div style="background: #2a2a2a; padding: 15px; margin-bottom: 12px; border-radius: 8px; border: 1px solid #444;">
+                    <b style="color: #f0b90b; font-size: 15px;"><%= vip.level %></b><br><br>
                     <label>Price (USDT):</label>
                     <input type="text" name="v_price" value="<%= vip.price %>" required>
                     
@@ -50,7 +50,7 @@
                 </div>
             <% }) %>
 
-            <button type="submit" style="width: 100%; padding: 14px; background: #0066ff; font-size: 16px; margin-top: 10px;">Save All Settings & VIP Plans</button>
+            <button type="submit" style="width: 100%; padding: 14px; background: #f0b90b; color: black; font-size: 16px; margin-top: 10px;">Save All Settings & VIP Plans</button>
         </form>
     </div>
 
@@ -68,7 +68,7 @@
                 <th>Action</th>
             </tr>
             <% if(transactions.length === 0) { %>
-                <tr><td colspan="7" style="text-align: center;">No transactions found.</td></tr>
+                <tr><td colspan="7" style="text-align: center; color: #aaa;">No transactions found.</td></tr>
             <% } else { %>
                 <% transactions.forEach(tx => { %>
                     <tr>
@@ -76,8 +76,7 @@
                         <td><%= tx.phone %></td>
                         <td><b><%= tx.amount %> USDT</b></td>
                         <td><%= tx.txid %></td>
-                        <td>
-                            <% if(tx.screenshot) { %>
+                        <td><% if(tx.screenshot) { %>
                                 <a href="/uploads/<%= tx.screenshot %>" target="_blank"><img src="/uploads/<%= tx.screenshot %>"></a>
                             <% } else { %> No Image <% } %>
                         </td>
@@ -87,7 +86,7 @@
                                 <form action="/admin/verify/<%= tx.id %>" method="POST" style="display:inline;">
                                     <button type="submit">Approve</button>
                                 </form>
-                                <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline;">
+                                <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline; margin-left: 5px;">
                                     <button type="submit" class="reject-btn">Reject</button>
                                 </form>
                             <% } else { %>
@@ -108,14 +107,14 @@
                 <th>Phone Number</th>
                 <th>User ID</th>
                 <th>Balance</th>
-                <th>UPI / Bank Details</th>
+                <th>Team Commission</th>
             </tr>
             <% users.forEach(u => { %>
                 <tr>
                     <td><%= u.phone %></td>
                     <td><%= u.referral_code %></td>
-                    <td><b><%= u.balance %> USDT</b></td>
-                    <td>UPI: <%= u.upi  'N/A' %><br>Bank: <%= u.bank_details  'N/A' %></td>
+                    <td><b><%= u.balance.toFixed(2) %> USDT</b></td>
+                    <td><b><%= u.team_commission.toFixed(2) %> USDT</b></td>
                 </tr>
             <% }) %>
         </table>
