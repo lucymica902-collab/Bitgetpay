@@ -3,32 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Levels - Bitgetpay</title>
+    <title>VIP Levels - Bitget</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7fc; margin: 0; padding-bottom: 70px; }
-        .header { background: #0066ff; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
-        .vip-card { background: white; margin: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border-left: 5px solid #ff9900; }
-        .vip-title { font-weight: bold; font-size: 16px; color: #333; display: flex; justify-content: space-between; }
-        .vip-desc { font-size: 13px; color: #666; margin-top: 8px; line-height: 1.5; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
-        .nav-item { text-align: center; text-decoration: none; color: #666; font-size: 11px; }
-        .nav-item.active { color: #0066ff; font-weight: bold; }
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding-bottom: 70px; }
+        .header { background: #1f1f1f; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #333; }
+        .card { background: #1f1f1f; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #333; border-left: 5px solid #f0b90b; }
+        .btn-invest { background: #f0b90b; color: black; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; margin-top: -35px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; }
+        .nav-item { text-align: center; text-decoration: none; color: #aaa; font-size: 11px; }
+        .nav-item.active { color: #f0b90b; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="header">VIP Investment Levels</div>
 
-    <% vip_levels.forEach(vip => { %>
-        <div class="vip-card">
-            <div class="vip-title">
-                <span><%= vip.level %></span>
-                <span style="color: #0066ff;"><%= vip.price %> USDT</span>
-            </div>
-            <div class="vip-desc">
-                📈 Daily Return: <b><%= vip.daily %> USDT/day</b><br>
-                ⏳ Duration: <b><%= vip.days %> Days</b><br>
-                ✨ <%= vip.desc %>
-            </div>
+    <% if(success) { %> <div style="color: #00ffcc; text-align: center; margin: 10px;">VIP Level Subscribed Successfully!</div> <% } %>
+    <% if(error) { %> <div style="color: #ff4d4d; text-align: center; margin: 10px;">Insufficient Balance! Please Deposit first.</div> <% } %>
+
+    <% settings.vip_levels.forEach(vip => { %>
+        <div class="card">
+            <h3 style="margin: 0 0 10px 0; color: #f0b90b;"><%= vip.level %></h3>
+            <p style="font-size: 13px; color: #aaa; margin: 4px 0;">Price: <b><%= vip.price %> USDT</b></p>
+            <p style="font-size: 13px; color: #aaa; margin: 4px 0;">Daily Return: <b style="color: #00ffcc;"><%= vip.daily %> USDT/day</b></p>
+            <p style="font-size: 13px; color: #aaa; margin: 4px 0;">Duration: <b><%= vip.days %> Days</b></p>
+            
+            <form action="/buy-vip" method="POST">
+                <input type="hidden" name="level" value="<%= vip.level %>">
+                <input type="hidden" name="price" value="<%= vip.price %>">
+                <input type="hidden" name="daily" value="<%= vip.daily %>">
+                <input type="hidden" name="days" value="<%= vip.days %>">
+                <button type="submit" class="btn-invest">Invest Now</button>
+            </form>
         </div>
     <% }) %>
 
