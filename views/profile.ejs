@@ -3,46 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile - Bitgetpay</title>
+    <title>Profile - Bitget</title>
     <style>
-        body { font-family: sans-serif; background: #f4f7fc; margin: 0; padding-bottom: 70px; }
-        .header { background: #0066ff; color: white; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; }
-        .card { background: white; margin: 15px; padding: 15px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        input, button { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
-        button { background: #0066ff; color: white; border: none; font-weight: bold; cursor: pointer; }
-        .logout-btn { background: #dc3545; display: block; text-align: center; text-decoration: none; color: white; padding: 12px; border-radius: 8px; margin: 15px; font-weight: bold; }
-        .success { color: green; font-size: 14px; text-align: center; margin-bottom: 10px; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: white; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
-        .nav-item { text-align: center; text-decoration: none; color: #666; font-size: 11px; }
-        .nav-item.active { color: #0066ff; font-weight: bold; }
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding-bottom: 70px; }
+        .header { background: #1f1f1f; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #333; }
+        .card { background: #1f1f1f; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #333; }
+        .logout-btn { display: block; background: #ff4d4d; color: white; text-align: center; padding: 12px; border-radius: 8px; text-decoration: none; font-weight: bold; margin: 15px; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; }
+        .nav-item { text-align: center; text-decoration: none; color: #aaa; font-size: 11px; }
+        .nav-item.active { color: #f0b90b; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="header">User Profile & Payout Details</div>
+    <div class="header">User Profile</div>
 
     <div class="card">
-        <% if(success) { %> <div class="success">Profile updated successfully!</div> <% } %>
         <p>📱 Mobile Number: <b><%= user.phone %></b></p>
-        <p>🔑 User ID / Referral: <b><%= user.referral_code %></b></p>
-
-        <form action="/profile" method="POST" enctype="multipart/form-data">
-            <label>UPI ID</label>
-            <input type="text" name="upi" value="<%= user.upi %>" placeholder="Enter UPI ID">
-
-            <label>Digital Rupee Wallet ID</label>
-            <input type="text" name="digital_rupee" value="<%= user.digital_rupee %>" placeholder="Enter Digital Rupee ID">
-
-            <label>Bank Card / IMPS / RTGS Details</label>
-            <input type="text" name="bank_details" value="<%= user.bank_details %>" placeholder="A/C No, IFSC, Bank Name">
-
-            <label>Upload QR Code (for Receiving)</label>
-            <input type="file" name="qr_code" accept="image/*">
-
-            <button type="submit">Save Details</button>
-        </form>
+        <p>🔑 Referral Code / ID: <b style="color: #f0b90b;"><%= user.referral_code %></b></p>
     </div>
 
-    <a href="/logout" class="logout-btn">Logout Account</a>
+    <div class="card">
+        <h3>Deposit History</h3>
+        <% if(!user.deposit_history || user.deposit_history.length === 0) { %>
+            <p style="font-size: 12px; color: #aaa;">No deposit history found.</p>
+        <% } else { %>
+            <% user.deposit_history.forEach(d => { %>
+                <div style="font-size: 12px; border-bottom: 1px solid #333; padding: 6px 0;">
+                    ➕ <b><%= d.amount %> USDT</b> - <%= d.date %>
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <div class="card">
+        <h3>VIP Level History</h3>
+        <% if(!user.investments || user.investments.length === 0) { %>
+            <p style="font-size: 12px; color: #aaa;">No active VIP investments.</p>
+        <% } else { %>
+            <% user.investments.forEach(inv => { %>
+                <div style="font-size: 12px; border-bottom: 1px solid #333; padding: 6px 0;">
+                    ⭐ <b><%= inv.level %></b> (<%= inv.price %> USDT) - Daily: <%= inv.daily %> USDT
+                </div>
+            <% }) %>
+        <% } %>
+    </div>
+
+    <a href="/logout" class="logout-btn">Logout</a>
 
     <div class="bottom-nav">
         <a href="/" class="nav-item">🏠 Home</a>
