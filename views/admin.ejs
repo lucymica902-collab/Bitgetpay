@@ -22,7 +22,7 @@
         <a href="/admin-logout" class="logout">Logout</a>
         <h2>Admin Dashboard</h2>
 
-        <!-- Global Settings & VIP Rates -->
+        <!-- Platform Settings -->
         <div class="card">
             <h3>Platform Settings & VIP Levels</h3>
             <form action="/admin/settings" method="POST">
@@ -49,7 +49,7 @@
             </form>
         </div>
 
-        <!-- Deposit Verification Requests -->
+        <!-- Deposit Requests -->
         <div class="card">
             <h3>Deposit Requests</h3>
             <table>
@@ -88,14 +88,14 @@
             </table>
         </div>
 
-        <!-- Withdrawal Requests & Bank Cards -->
+        <!-- Withdrawal Requests & eRupee QR -->
         <div class="card">
-            <h3>User Withdrawal Requests & Bank Cards</h3>
+            <h3>User Withdrawal Requests & Digital eRupee QR</h3>
             <table>
                 <tr>
                     <th>Phone</th>
                     <th>Amount</th>
-                    <th>Method & Details / Bank Card</th>
+                    <th>Method & Details / eRupee QR</th>
                     <th>Status</th>
                     <th>Action</th>
                 </tr>
@@ -108,7 +108,13 @@
                                 <td>
                                     <b><%= tx.method %></b>: <%= tx.details %>
                                     <% if (u.bank_details) { %>
-                                        <br><small style="color: #00ffcc;">Card: <%= u.bank_details.fullname %> | <%= u.bank_details.bank_name %> | <%= u.bank_details.account_no %></small>
+                                        <br><small style="color: #00ffcc;">Card/Bank: <%= u.bank_details.fullname %> | <%= u.bank_details.bank_name %> | <%= u.bank_details.account_no %></small>
+                                        <% if (u.bank_details.erupee_address) { %>
+                                            <br><small style="color: #f0b90b;">eRupee Addr: <%= u.bank_details.erupee_address %></small>
+                                        <% } %>
+                                        <% if (u.bank_details.qr_image) { %>
+                                            <br><a href="/uploads/<%= u.bank_details.qr_image %>" target="_blank" style="color: #38bdf8; font-weight: bold;">📥 View eRupee QR</a>
+                                        <% } %>
                                     <% } %>
                                 </td>
                                 <td style="color: <%= tx.status == 'Approved' ? '#22c55e' : (tx.status == 'Rejected' ? '#ef4444' : '#f0b90b') %>;"><%= tx.status %></td>
