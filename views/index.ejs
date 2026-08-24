@@ -5,40 +5,41 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bitget - Home</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding-bottom: 70px; }
-        .header { background: #1f1f1f; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #333; }
-        .card { background: #1f1f1f; margin: 15px; padding: 20px; border-radius: 12px; border: 1px solid #333; }
-        .balance-box { font-size: 24px; font-weight: bold; color: #00ffcc; margin: 10px 0; }
-        .btn-topup { display: block; background: #f0b90b; color: black; text-align: center; padding: 12px; border-radius: 8px; font-weight: bold; text-decoration: none; margin-top: 15px; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; }
-        .nav-item { text-align: center; text-decoration: none; color: #aaa; font-size: 11px; }
-        .nav-item.active { color: #f0b90b; font-weight: bold; }
+        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding: 20px; padding-bottom: 70px; }
+        .card { background: #1f1f1f; padding: 20px; border-radius: 8px; border: 1px solid #333; max-width: 450px; margin: auto; margin-bottom: 15px; }
+        .btn-primary { display: block; text-align: center; background: #f0b90b; color: black; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; }
+        .btn-success { display: block; text-align: center; background: #22c55e; color: white; padding: 12px; border-radius: 6px; text-decoration: none; font-weight: bold; margin-top: 10px; }
+        /* Bottom Navbar Styling */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #181818; border-top: 1px solid #333; display: flex; justify-content: space-around; padding: 10px 0; z-index: 1000; }
+        .bottom-nav a { color: #aaa; text-decoration: none; font-size: 12px; text-align: center; }
+        .bottom-nav a.active { color: #f0b90b; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="header">Bitget Dashboard</div>
 
     <div class="card">
-        <div style="font-size: 14px; color: #aaa;">Live USDT Rate</div>
-        <div style="font-size: 18px; color: #f0b90b; font-weight: bold;">1 USDT = ₹<%= settings.usdt_rate %></div>
-        
-        <hr style="border: 0; border-top: 1px solid #333; margin: 15px 0;">
+        <h3>Bitget Dashboard</h3>
+        <p style="color: #aaa; font-size: 14px;">Live USDT Rate</p>
+        <h2 style="color: #f0b90b; margin-top: 5px;">1 USDT = ₹<%= settings.usdt_rate %></h2>
+        <hr style="border: 0; border-top: 1px solid #333;">
+        <p style="color: #aaa; font-size: 14px;">Total Balance</p>
+        <h2 style="color: #00ffcc;"><%= user.balance.toFixed(2) %> USDT</h2>
+        <p style="color: #aaa; font-size: 14px;">Team Commission</p>
+        <h3 style="color: #38bdf8;"><%= user.team_commission.toFixed(2) %> USDT</h3>
 
-        <div style="font-size: 14px; color: #aaa;">Total Balance</div>
-        <div class="balance-box"><%= user.balance.toFixed(2) %> USDT</div>
-
-        <div style="font-size: 14px; color: #aaa;">Team Commission</div>
-        <div style="font-size: 18px; color: #00ffcc; font-weight: bold;"><%= user.team_commission.toFixed(2) %> USDT</div>
-
-        <a href="/deposit" class="btn-topup">Top Up / Deposit</a>
+        <a href="/deposit" class="btn-primary">Top Up / Deposit</a>
+        <a href="/withdraw" class="btn-success">Withdrawal & Bank Card</a>
     </div>
 
+    <!-- Bottom Navigation Bar -->
     <div class="bottom-nav">
-        <a href="/" class="nav-item active">🏠 Home</a>
-        <a href="/deposit" class="nav-item">🔄 Deposit</a>
-        <a href="/vip" class="nav-item">⭐ VIP</a>
-        <a href="/team" class="nav-item">📊 Team</a>
-        <a href="/profile" class="nav-item">👤 Me</a>
+        <a href="/" class="active">🏠<br>Home</a>
+        <a href="/deposit">💳<br>Deposit</a>
+        <a href="/withdraw">🏦<br>Withdraw</a>
+        <a href="/vip">⭐<br>VIP</a>
+        <a href="/team">📊<br>Team</a>
+        <a href="/profile">👤<br>Me</a>
     </div>
+
 </body>
 </html>
