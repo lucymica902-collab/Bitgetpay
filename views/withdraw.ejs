@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdrawal & Bank Cards - Bitget</title>
+    <title>Withdrawal & Digital eRupee - Bitget</title>
     <style>
         body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding: 20px; }
         .card { background: #1f1f1f; padding: 20px; border-radius: 8px; border: 1px solid #333; max-width: 450px; margin: auto; margin-bottom: 20px; }
@@ -24,18 +24,28 @@
         <% if (success === 'true') { %>
             <div class="alert success">Withdrawal request submitted successfully!</div>
         <% } else if (success === 'bank') { %>
-            <div class="alert success">Bank/UPI details saved successfully!</div>
+            <div class="alert success">Bank / Digital eRupee details saved successfully!</div>
         <% } %>
         <% if (error === 'true') { %>
             <div class="alert error">Insufficient balance or invalid amount!</div>
         <% } %>
 
-        <h3>1. Bind Bank Card / UPI</h3>
-        <form action="/save-bank" method="POST">
-            <input type="text" name="fullname" placeholder="Full Name (as per bank)" value="<%= user.bank_details ? user.bank_details.fullname : '' %>" required>
-            <input type="text" name="bank_name" placeholder="Bank Name / Paytm / PhonePe" value="<%= user.bank_details ? user.bank_details.bank_name : '' %>" required>
+        <h3>1. Bind Bank / Digital eRupee</h3>
+        <form action="/save-bank" method="POST" enctype="multipart/form-data">
+            <input type="text" name="fullname" placeholder="Full Name" value="<%= user.bank_details ? user.bank_details.fullname : '' %>" required>
+            <input type="text" name="bank_name" placeholder="Bank Name / UPI" value="<%= user.bank_details ? user.bank_details.bank_name : '' %>" required>
             <input type="text" name="account_no" placeholder="Account Number / UPI ID" value="<%= user.bank_details ? user.bank_details.account_no : '' %>" required>
-            <button type="submit" style="background: #22c55e; color: white;">Save / Update Bank Card</button>
+            
+            <label style="color: #f0b90b; font-size: 14px;"><b>Digital eRupee Wallet Address</b></label>
+            <input type="text" name="erupee_address" placeholder="Enter Digital eRupee Wallet Address" value="<%= user.bank_details ? user.bank_details.erupee_address : '' %>">
+
+            <label style="color: #00ffcc; font-size: 14px;"><b>Upload Digital eRupee QR Code Image</b></label>
+            <input type="file" name="qr_image" accept="image/*" style="background: #333;">
+            <% if (user.bank_details && user.bank_details.qr_image) { %>
+                <p style="font-size: 12px; color: #aaa;">Current QR: <a href="/uploads/<%= user.bank_details.qr_image %>" target="_blank" style="color: #00ffcc;">View QR</a></p>
+            <% } %>
+
+            <button type="submit" style="background: #22c55e; color: white; margin-top: 10px;">Save Details & QR</button>
         </form>
     </div>
 
@@ -45,11 +55,11 @@
             <label><b>Withdrawal Method</b></label>
             <select name="method" required>
                 <option value="Bank / UPI">Bank Card / UPI</option>
-                <option value="USDT TRC20">USDT (TRC20 Wallet)</option>
+                <option value="Digital eRupee">Digital eRupee Wallet</option>
             </select>
 
-            <label><b>Destination (Account No / UPI / TRC20 Address)</b></label>
-            <input type="text" name="details" placeholder="Enter Account No, UPI or TRC20 Address" required>
+            <label><b>Destination (Account / UPI / eRupee Address)</b></label>
+            <input type="text" name="details" placeholder="Enter Account No, UPI or eRupee Address" required>
 
             <label><b>Amount (USDT)</b></label>
             <input type="number" step="0.01" name="amount" placeholder="Enter amount to withdraw" required>
