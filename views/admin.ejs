@@ -25,15 +25,18 @@
         <a href="/admin-logout" class="logout">Logout</a>
     </div>
 
-    <!-- Settings & VIP Control Card -->
+    <!-- Settings, Support Link & VIP Control Card -->
     <div class="card">
-        <h3>Control Deposit Settings & VIP Levels</h3>
+        <h3>Control Deposit Settings, Support Link & VIP Levels</h3>
         <form action="/admin/settings" method="POST">
             <label><b>TRC20 Wallet Address</b></label>
             <input type="text" name="trc_address" value="<%= settings.trc_address %>" required>
 
             <label><b>USDT to INR Rate</b></label>
             <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>" required>
+
+            <label><b>Telegram Customer Support Link</b></label>
+            <input type="text" name="support_link" value="<%= settings.support_link %>" required>
 
             <h3 style="margin-top: 25px; color: #f0b90b; border-top: 1px solid #333; padding-top: 15px;">Manage VIP Levels (Price, Daily Return, Days)</h3>
             <% settings.vip_levels.forEach((vip) => { %>
@@ -72,11 +75,11 @@
             <% } else { %>
                 <% transactions.forEach(tx => { %>
                     <tr>
-                        <td><%= tx.date %></td>
-                        <td><%= tx.phone %></td>
+                        <td><%= tx.date %></td><td><%= tx.phone %></td>
                         <td><b><%= tx.amount %> USDT</b></td>
                         <td><%= tx.txid %></td>
-                        <td><% if(tx.screenshot) { %>
+                        <td>
+                            <% if(tx.screenshot) { %>
                                 <a href="/uploads/<%= tx.screenshot %>" target="_blank"><img src="/uploads/<%= tx.screenshot %>"></a>
                             <% } else { %> No Image <% } %>
                         </td>
