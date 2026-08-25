@@ -2,7 +2,6 @@ const express = require('express');
 const session = require('express-session');
 const multer = require('multer');
 const path = require('path');
-const fs = require('fs');
 const mongoose = require('mongoose');
 
 const app = express();
@@ -43,7 +42,7 @@ const transactionSchema = new mongoose.Schema({
     phone: String,
     amount: Number,
     txid: String,
-    screenshot: String,
+    screenshot: String, // Base64 image data
     date: String,
     status: { type: String, default: 'Pending' }
 });
@@ -76,7 +75,6 @@ async function getSettings() {
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
@@ -86,24 +84,8 @@ app.use(session({
     saveUninitialized: true
 }));
 
-// --- MULTER STORAGE SETUP (AUTO FOLDER CREATION) ---
-const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-    destination: (req, file, cb) => {
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
-    },
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
-});
-const upload = multer({ storage: storage });
+// --- MEMORY STORAGE SETUP (NO FOLDER NEEDED) ---
+const upload = multer({ storage: multer.memoryStorage() });
 
 // --- ROUTES ---
 app.get('/register', (req, res) => {
@@ -182,12 +164,18 @@ app.post('/submit-deposit', upload.single('screenshot'), async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const { amount, txid } = req.body;
+        
+        let screenshotData = '';
+        if (req.file) {
+            screenshotData = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+        }
+
         const newTx = new Transaction({
             id: Date.now(),
             phone: req.session.user.phone,
             amount: parseFloat(amount),
             txid,
-            screenshot: req.file ? req.file.filename : '',
+            screenshot: screenshotData,
             date: new Date().toLocaleString(),
             status: 'Pending'
         });
@@ -275,7 +263,7 @@ app.post('/save-bank', upload.single('qr_image'), async (req, res) => {
 
         let qr_image = user.bank_details ? user.bank_details.qr_image : '';
         if (req.file) {
-            qr_image = req.file.filename;
+            qr_image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
         }
 
         user.bank_details = { fullname, bank_name, account_no, ifsc_upi, erupee_address, qr_image };
