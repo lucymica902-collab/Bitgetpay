@@ -3,16 +3,29 @@ const session = require('express-session');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
+const mongoose = require('mongoose');
 
 const app = express();
 
-const ADMIN_USERNAME = "bitpay00@";
-const ADMIN_PASSWORD = "Bitpay@02";
+const ADMIN_USERNAME = "bitpay008";
+const ADMIN_PASSWORD = "Bitpay002";
+
+// Aapka Secure MongoDB Connection URI
+const MONGO_URI = 'mongodb+srv://admin0207:Hukam02@cluster0.grxfume.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
+
+// Database Connection
+mongoose.connect(MONGO_URI)
+  .then(() => {
+    console.log('MongoDB Database Connected Successfully!');
+  })
+  .catch((err) => {
+    console.error('MongoDB Connection Error:', err);
+  });
 
 const settingsFile = path.join(__dirname, 'settings.json');
 if (!fs.existsSync(settingsFile)) {
     fs.writeFileSync(settingsFile, JSON.stringify({
-        trc_address: "TRjGbgMkRbbhzdjXU1QMCN4AM1BrtfnG5B",
+        trc_address: "TRJgbgMkRbbhzdjXU1QMCN4AM1BrtfnG5B",
         usdt_rate: "108.12",
         support_link: "https://t.me/lucy9029",
         vip_levels: [
@@ -33,19 +46,19 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(session({
-    secret: 'bitgetpay_secure_key_2026',
+    secret: 'bitpay_secure_key_2026',
     resave: false,
     saveUninitialized: true
 }));
 
 const uploadDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadDir)) { fs.mkdirSync(uploadDir, { recursive: true }); }
+if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 
 const dbFile = path.join(__dirname, 'database.json');
-if (!fs.existsSync(dbFile)) { fs.writeFileSync(dbFile, JSON.stringify([])); }
+if (!fs.existsSync(dbFile)) fs.writeFileSync(dbFile, JSON.stringify([]));
 
 const usersFile = path.join(__dirname, 'users.json');
-if (!fs.existsSync(usersFile)) { fs.writeFileSync(usersFile, JSON.stringify([])); }
+if (!fs.existsSync(usersFile)) fs.writeFileSync(usersFile, JSON.stringify([]));
 
 const storage = multer.diskStorage({
     destination: (req, file, cb) => cb(null, 'uploads/'),
@@ -82,7 +95,7 @@ app.post('/register', (req, res) => {
     const { phone, password, referral_code } = req.body;
     let users = getUsers();
     if (users.find(u => u.phone === phone)) {
-        return res.render('register', { error: 'Phone number already registered!', ref: '' });
+        return res.render('register', { error: 'Phone number already registered', ref: '' });
     }
     const myReferralCode = 'BP' + Math.floor(100000 + Math.random() * 900000);
     users.push({
@@ -100,26 +113,34 @@ app.post('/register', (req, res) => {
     res.redirect('/login');
 });
 
-app.get('/login', (req, res) => { res.render('user-login', { error: null }); });
+app.get('/login', (req, res) => res.render('user-login', { error: null }));
 app.post('/login', (req, res) => {
     const { phone, password } = req.body;
     let users = getUsers();
-    const user = users.find(u => u.phone === phone && u.password === password);
-    if (user) { req.session.user = user; res.redirect('/'); }
-    else { res.render('user-login', { error: 'Invalid phone number or password' }); }
+    let user = users.find(u => u.phone === phone && u.password === password);
+    if (user) {
+        req.session.user = user;
+        res.redirect('/');
+    } else {
+        res.render('user-login', { error: 'Invalid phone number or password' });
+    }
 });
-app.get('/logout', (req, res) => { req.session.user = null; res.redirect('/login'); });
+
+app.get('/logout', (req, res) => {
+    req.session.user = null;
+    res.redirect('/login');
+});
 
 app.get('/', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
-    req.session.user = users.find(u => u.id === req.session.user.id) || req.session.user;
+    req.session.user = users.find(u => u.id === req.session.user.id);
     res.render('index', { user: req.session.user, settings: getSettings() });
 });
 
 app.get('/deposit', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    res.render('deposit', { user: req.session.user, settings: getSettings(), success: req.query.success === 'true' });
+    res.render('deposit', { user: req.session.user, settings: getSettings() });
 });
 
 app.post('/submit-deposit', upload.single('screenshot'), (req, res) => {
@@ -141,7 +162,7 @@ app.post('/submit-deposit', upload.single('screenshot'), (req, res) => {
 
 app.get('/vip', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
-    res.render('vip', { user: req.session.user, settings: getSettings(), success: req.query.success === 'true', error: req.query.error === 'true' });
+    res.render('vip', { user: req.session.user, settings: getSettings() });
 });
 
 app.post('/buy-vip', (req, res) => {
@@ -165,9 +186,9 @@ app.post('/buy-vip', (req, res) => {
 app.get('/team', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
-    const teamA = users.filter(u => u.referred_by === req.session.user.referral_code);
+    let teamA = users.filter(u => u.referred_by === req.session.user.referral_code);
     let teamA_codes = teamA.map(u => u.referral_code);
-    const teamB = users.filter(u => teamA_codes.includes(u.referred_by));
+    let teamB = users.filter(u => teamA_codes.includes(u.referred_by));
     res.render('team', { user: req.session.user, teamA, teamB });
 });
 
@@ -178,13 +199,12 @@ app.get('/profile', (req, res) => {
     res.render('profile', { user: req.session.user, settings: getSettings() });
 });
 
-// --- Withdrawal & Digital eRupee QR Routes ---
 app.get('/withdraw', (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     let users = getUsers();
     let currentUser = users.find(u => u.id === req.session.user.id);
     req.session.user = currentUser;
-    res.render('withdraw', { user: currentUser, success: req.query.success, error: req.query.error === 'true' });
+    res.render('withdraw', { user: currentUser, success: req.query.success, error: req.query.error });
 });
 
 app.post('/save-bank', upload.single('qr_image'), (req, res) => {
@@ -192,7 +212,7 @@ app.post('/save-bank', upload.single('qr_image'), (req, res) => {
     const { fullname, bank_name, account_no, ifsc_upi, erupee_address } = req.body;
     let users = getUsers();
     let user = users.find(u => u.id === req.session.user.id);
-    
+
     let qr_image = user.bank_details ? user.bank_details.qr_image : '';
     if (req.file) {
         qr_image = req.file.filename;
@@ -210,6 +230,7 @@ app.post('/submit-withdraw', (req, res) => {
     let users = getUsers();
     let user = users.find(u => u.id === req.session.user.id);
     let withdrawAmount = parseFloat(amount);
+
     if (user.balance >= withdrawAmount && withdrawAmount > 0) {
         user.balance -= withdrawAmount;
         if (!user.withdraw_history) user.withdraw_history = [];
@@ -229,13 +250,15 @@ app.post('/submit-withdraw', (req, res) => {
     }
 });
 
-app.get('/admin-login', (req, res) => { res.render('admin-login', { error: false }); });
+app.get('/admin-login', (req, res) => res.render('admin-login', { error: null }));
 app.post('/admin-login', (req, res) => {
     const { username, password } = req.body;
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         req.session.admin = true;
         res.redirect('/admin');
-    } else { res.render('admin-login', { error: true }); }
+    } else {
+        res.render('admin-login', { error: true });
+    }
 });
 
 app.get('/admin', (req, res) => {
@@ -250,6 +273,7 @@ app.post('/admin/settings', (req, res) => {
     settings.trc_address = trc_address;
     settings.usdt_rate = usdt_rate;
     settings.support_link = support_link;
+
     if (v_price && Array.isArray(v_price)) {
         for (let i = 0; i < settings.vip_levels.length; i++) {
             settings.vip_levels[i].price = v_price[i];
@@ -273,7 +297,8 @@ app.post('/admin/verify/:id', (req, res) => {
         if (user) {
             user.balance += tx.amount;
             if (!user.deposit_history) user.deposit_history = [];
-            user.deposit_history.push({ amount: tx.amount, date: tx.date, txid: tx.txid });
+            user.deposit_history.push({ amount: tx.amount, date: tx.date });
+
             if (user.referred_by) {
                 let referrerA = users.find(u => u.referral_code === user.referred_by);
                 if (referrerA) {
@@ -281,7 +306,7 @@ app.post('/admin/verify/:id', (req, res) => {
                     if (tx.amount >= 100) referrerA.balance += 5;
                     if (referrerA.referred_by) {
                         let referrerB = users.find(u => u.referral_code === referrerA.referred_by);
-                        if (referrerB) { referrerB.team_commission += (tx.amount * 0.001); }
+                        if (referrerB) referrerB.team_commission += (tx.amount * 0.001);
                     }
                 }
             }
@@ -329,7 +354,12 @@ app.post('/admin/withdraw/reject/:id', (req, res) => {
     res.redirect('/admin');
 });
 
-app.get('/admin-logout', (req, res) => { req.session.admin = false; res.redirect('/admin-login'); });
+app.get('/admin-logout', (req, res) => {
+    req.session.admin = false;
+    res.redirect('/admin-login');
+});
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => { console.log(`Server running on port ${PORT}`); });
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+});
