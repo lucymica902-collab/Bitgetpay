@@ -154,7 +154,7 @@ app.get('/deposit', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const user = await User.findById(req.session.user._id);
-        res.render('deposit', { user, settings: await getSettings() });
+        res.render('deposit', { user, settings: await getSettings(), success: req.query.success || null });
     } catch (err) {
         res.redirect('/login');
     }
