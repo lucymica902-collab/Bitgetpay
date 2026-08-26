@@ -1,6 +1,5 @@
 const express = require('express');
 const session = require('express-session');
-const multer = require('multer');
 const path = require('path');
 const mongoose = require('mongoose');
 
@@ -42,7 +41,6 @@ const transactionSchema = new mongoose.Schema({
     phone: String,
     amount: Number,
     txid: String,
-    screenshot: String, // Base64 image data
     date: String,
     status: { type: String, default: 'Pending' }
 });
@@ -83,9 +81,6 @@ app.use(session({
     resave: false,
     saveUninitialized: true
 }));
-
-// --- MEMORY STORAGE SETUP (NO FOLDER NEEDED) ---
-const upload = multer({ storage: multer.memoryStorage() });
 
 // --- ROUTES ---
 app.get('/register', (req, res) => {
@@ -160,22 +155,16 @@ app.get('/deposit', async (req, res) => {
     }
 });
 
-app.post('/submit-deposit', upload.single('screenshot'), async (req, res) => {
+app.post('/submit-deposit', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const { amount, txid } = req.body;
         
-        let screenshotData = '';
-        if (req.file) {
-            screenshotData = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-        }
-
         const newTx = new Transaction({
             id: Date.now(),
             phone: req.session.user.phone,
             amount: parseFloat(amount),
             txid,
-            screenshot: screenshotData,
             date: new Date().toLocaleString(),
             status: 'Pending'
         });
@@ -187,11 +176,33 @@ app.post('/submit-deposit', upload.single('screenshot'), async (req, res) => {
     }
 });
 
+// Direct VIP Level Recharge Route
+app.post('/submit-vip-deposit', async (req, res) => {
+    if (!req.session.user) return res.redirect('/login');
+    try {
+        const { amount, txid, vip_level } = req.body;
+        
+        const newTx = new Transaction({
+            id: Date.now(),
+            phone: req.session.user.phone,
+            amount: parseFloat(amount),
+            txid: `${txid} [VIP Level: ${vip_level}]`,
+            date: new Date().toLocaleString(),
+            status: 'Pending'
+        });
+        await newTx.save();
+        res.redirect('/vip?success=true');
+    } catch (err) {
+        console.error(err);
+        res.redirect('/vip?error=true');
+    }
+});
+
 app.get('/vip', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const user = await User.findById(req.session.user._id);
-        res.render('vip', { user, settings: await getSettings() });
+        res.render('vip', { user, settings: await getSettings(), success: req.query.success || null });
     } catch (err) {
         res.redirect('/login');
     }
@@ -255,18 +266,13 @@ app.get('/withdraw', async (req, res) => {
     }
 });
 
-app.post('/save-bank', upload.single('qr_image'), async (req, res) => {
+app.post('/save-bank', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const { fullname, bank_name, account_no, ifsc_upi, erupee_address } = req.body;
         let user = await User.findById(req.session.user._id);
 
-        let qr_image = user.bank_details ? user.bank_details.qr_image : '';
-        if (req.file) {
-            qr_image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
-        }
-
-        user.bank_details = { fullname, bank_name, account_no, ifsc_upi, erupee_address, qr_image };
+        user.bank_details = { fullname, bank_name, account_no, ifsc_upi, erupee_address, qr_image: '' };
         await user.save();
         req.session.user = user;
         res.redirect('/withdraw?success=bank');
