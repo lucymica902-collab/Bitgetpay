@@ -3,46 +3,127 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIP Levels - Bitget</title>
+    <title>VIP Levels - Bitgetpay</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding-bottom: 70px; }
-        .header { background: #1f1f1f; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #333; }
-        .card { background: #1f1f1f; margin: 15px; padding: 15px; border-radius: 12px; border: 1px solid #333; border-left: 5px solid #f0b90b; }
-        .btn-invest { background: #f0b90b; color: black; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; float: right; margin-top: -35px; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #1f1f1f; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #333; }
-        .nav-item { text-align: center; text-decoration: none; color: #aaa; font-size: 11px; }
-        .nav-item.active { color: #f0b90b; font-weight: bold; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8f9fa; color: #333; padding-bottom: 80px; }
+        .header { background: #fff; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #eee; }
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        
+        .vip-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; border-left: 5px solid #007bff; }
+        .vip-title { font-size: 18px; font-weight: bold; color: #007bff; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+        .vip-info { font-size: 14px; color: #555; margin-bottom: 6px; display: flex; justify-content: space-between; }
+        
+        .buy-btn { width: 100%; background: #28a745; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 12px; }
+        .buy-btn:hover { background: #218838; }
+
+        .alert-success { background: #d1fae5; color: #065f46; padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; text-align: center; font-weight: bold; }
+
+        /* Modal Styles */
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; overflow-y: auto; padding: 20px; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 12px; width: 100%; max-width: 400px; text-align: center; box-shadow: 0 4px 20px rgba(0,0,0,0.2); }
+        .qr-img { width: 150px; height: 150px; margin: 0 auto 10px auto; display: block; border: 1px solid #ddd; border-radius: 8px; padding: 4px; }
+        .wallet-box { background: #f1f5f9; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; text-align: left; }
+        .wallet-text { font-size: 11px; color: #555; word-break: break-all; margin-right: 5px; }
+        .copy-btn { background: #e2e8f0; border: none; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: bold; color: #007bff; }
+        
+        .form-group { margin-bottom: 12px; text-align: left; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #444; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
+        
+        .submit-recharge { width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 5px; }
+        .close-modal { background: #e2e8f0; color: #333; margin-top: 8px; width: 100%; padding: 10px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
+        .nav-item { text-decoration: none; color: #666; font-size: 11px; text-align: center; }
+        .nav-item.active { color: #007bff; }
+        .nav-item div { font-size: 18px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
-    <div class="header">VIP Investment Levels</div>
 
-    <% if(success) { %> <div style="color: #00ffcc; text-align: center; margin: 10px;">VIP Level Subscribed Successfully!</div> <% } %>
-    <% if(error) { %> <div style="color: #ff4d4d; text-align: center; margin: 10px;">Insufficient Balance! Please Deposit first.</div> <% } %>
+    <div class="header">VIP Direct Recharge</div>
 
-    <% settings.vip_levels.forEach(vip => { %>
-        <div class="card">
-            <h3 style="margin: 0 0 10px 0; color: #f0b90b;"><%= vip.level %></h3>
-            <p style="font-size: 13px; color: #aaa; margin: 4px 0;">Price: <b><%= vip.price %> USDT</b></p>
-            <p style="font-size: 13px; color: #aaa; margin: 4px 0;">Daily Return: <b style="color: #00ffcc;"><%= vip.daily %> USDT/day</b></p>
-            <p style="font-size: 13px; color: #aaa; margin: 4px 0;">Duration: <b><%= vip.days %> Days</b></p>
+    <div class="container">
+        <% if (typeof success !== 'undefined' && success) { %>
+            <div class="alert-success">VIP Recharge request submitted! Waiting for admin approval.</div>
+        <% } %>
+
+        <!-- Loop through VIP levels -->
+        <% settings.vip_levels.forEach(vip => { %>
+            <div class="vip-card">
+                <div class="vip-title">
+                    <span><%= vip.level %></span>
+                    <span style="font-size: 16px; color: #333;"><%= vip.price %> USDT</span>
+                </div>
+                <div class="vip-info"><span>Daily Income:</span> <strong><%= vip.daily %> USDT</strong></div>
+                <div class="vip-info"><span>Cycle Days:</span> <strong><%= vip.days %> Days</strong></div>
+                
+                <button type="button" class="buy-btn" onclick="openVipModal('<%= vip.level %>', '<%= vip.price %>')">
+                    Direct Recharge & Activate
+                </button>
+            </div>
+        <% }) %>
+    </div>
+
+    <!-- Direct VIP Recharge Modal -->
+    <div id="vipModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle" style="color: #007bff; margin-bottom: 10px;">Recharge VIP</h3>
+            <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Scan QR or copy address to pay exact USDT amount:</p>
             
-            <form action="/buy-vip" method="POST">
-                <input type="hidden" name="level" value="<%= vip.level %>">
-                <input type="hidden" name="price" value="<%= vip.price %>">
-                <input type="hidden" name="daily" value="<%= vip.daily %>">
-                <input type="hidden" name="days" value="<%= vip.days %>">
-                <button type="submit" class="btn-invest">Invest Now</button>
+            <img class="qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=<%= settings.trc_address %>" alt="QR">
+            
+            <div class="wallet-box">
+                <span class="wallet-text" id="trcAddress"><%= settings.trc_address %></span>
+                <button class="copy-btn" onclick="copyAddress()">Copy</button>
+            </div>
+
+            <form action="/submit-vip-deposit" method="POST">
+                <input type="hidden" name="vip_level" id="inputVipLevel">
+                
+                <div class="form-group">
+                    <label>Amount (USDT)</label>
+                    <input type="text" name="amount" id="inputAmount" class="form-control" readonly required>
+                </div>
+
+                <div class="form-group">
+                    <label>Transaction ID (TXID) / Hash</label>
+                    <input type="text" name="txid" class="form-control" placeholder="Enter Transaction Hash" required>
+                </div>
+
+                <button type="submit" class="submit-recharge">Submit Direct Recharge</button>
             </form>
+
+            <button type="button" class="close-modal" onclick="closeVipModal()">Cancel</button>
         </div>
-    <% }) %>
+    </div>
 
     <div class="bottom-nav">
-        <a href="/" class="nav-item">🏠 Home</a>
-        <a href="/deposit" class="nav-item">🔄 Deposit</a>
-        <a href="/vip" class="nav-item active">⭐ VIP</a>
-        <a href="/team" class="nav-item">📊 Team</a>
-        <a href="/profile" class="nav-item">👤 Me</a>
+        <a href="/" class="nav-item"><div>🏠</div>Home</a>
+        <a href="/deposit" class="nav-item"><div>🔄</div>Deposit</a>
+        <a href="/vip" class="nav-item active"><div>👑</div>VIP</a>
+        <a href="/team" class="nav-item"><div>👥</div>Team</a>
+        <a href="/profile" class="nav-item"><div>👤</div>Me</a>
     </div>
+
+    <script>
+        function openVipModal(level, price) {
+            document.getElementById("modalTitle").innerText = "Recharge " + level;
+            document.getElementById("inputVipLevel").value = level;
+            document.getElementById("inputAmount").value = price;
+            document.getElementById("vipModal").style.display = "flex";
+        }
+
+        function closeVipModal() {
+            document.getElementById("vipModal").style.display = "none";
+        }
+
+        function copyAddress() {
+            var addressText = document.getElementById("trcAddress").innerText;
+            navigator.clipboard.writeText(addressText);
+            alert("TRC-20 Address Copied!");
+        }
+    </script>
 </body>
 </html>
