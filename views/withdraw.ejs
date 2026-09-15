@@ -3,72 +3,149 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Withdrawal & Digital eRupee - Bitget</title>
+    <title>Withdraw - Bitgetpay</title>
     <style>
-        body { font-family: sans-serif; background: #121212; color: white; margin: 0; padding: 20px; }
-        .card { background: #1f1f1f; padding: 20px; border-radius: 8px; border: 1px solid #333; max-width: 450px; margin: auto; margin-bottom: 20px; }
-        input, select { padding: 12px; margin: 8px 0 15px 0; width: 100%; border: 1px solid #444; border-radius: 6px; box-sizing: border-box; background: #2a2a2a; color: white; }
-        button { width: 100%; padding: 12px; background: #f0b90b; color: black; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 16px; }
-        .back { display: block; text-align: center; margin-top: 15px; color: #00ffcc; text-decoration: none; }
-        .alert { padding: 10px; margin-bottom: 15px; border-radius: 5px; text-align: center; font-size: 14px; }
-        .success { background: #004d26; color: #00ffcc; }
-        .error { background: #4d0000; color: #ff4d4d; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f8f9fa; color: #333; padding-bottom: 80px; }
+        .header { background: #fff; padding: 15px; text-align: center; font-size: 18px; font-weight: bold; border-bottom: 1px solid #eee; }
+        .container { padding: 15px; max-width: 500px; margin: auto; }
+        .card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); margin-bottom: 15px; }
+        .balance-box { font-size: 22px; font-weight: bold; color: #007bff; margin-bottom: 15px; text-align: center; }
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 12px; font-weight: bold; margin-bottom: 4px; color: #444; }
+        .form-control { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
+        .btn { width: 100%; background: #007bff; color: white; border: none; padding: 12px; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        .saved-details { background: #f1f5f9; padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 13px; border-left: 4px solid #28a745; }
+        .saved-details p { margin-bottom: 5px; }
+        .alert-success { background: #d1fae5; color: #065f46; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; text-align: center; font-weight: bold; }
+        .alert-error { background: #fee2e2; color: #991b1b; padding: 10px; border-radius: 6px; margin-bottom: 15px; font-size: 13px; text-align: center; font-weight: bold; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; width: 100%; background: #fff; display: flex; justify-content: space-around; padding: 10px 0; border-top: 1px solid #ddd; }
+        .nav-item { text-decoration: none; color: #666; font-size: 11px; text-align: center; }
+        .nav-item.active { color: #007bff; }
+        .nav-item div { font-size: 18px; margin-bottom: 2px; }
     </style>
 </head>
 <body>
+    <div class="header">Withdrawal Management</div>
+    <div class="container">
+        <div class="card">
+            <div class="balance-box">Balance: <%= user.balance.toFixed(2) %> USDT</div>
 
-    <div class="card">
-        <h2>Withdrawal Dashboard</h2>
-        <p style="color: #aaa; font-size: 14px;">Available Balance: <b style="color: #00ffcc;"><%= user.balance.toFixed(2) %> USDT</b></p>
-
-        <% if (success === 'true') { %>
-            <div class="alert success">Withdrawal request submitted successfully!</div>
-        <% } else if (success === 'bank') { %>
-            <div class="alert success">Bank / Digital eRupee details saved successfully!</div>
-        <% } %>
-        <% if (error === 'true') { %>
-            <div class="alert error">Insufficient balance or invalid amount!</div>
-        <% } %>
-
-        <h3>1. Bind Bank / Digital eRupee</h3>
-        <form action="/save-bank" method="POST" enctype="multipart/form-data">
-            <input type="text" name="fullname" placeholder="Full Name" value="<%= user.bank_details ? user.bank_details.fullname : '' %>" required>
-            <input type="text" name="bank_name" placeholder="Bank Name / UPI" value="<%= user.bank_details ? user.bank_details.bank_name : '' %>" required>
-            <input type="text" name="account_no" placeholder="Account Number / UPI ID" value="<%= user.bank_details ? user.bank_details.account_no : '' %>" required>
-            
-            <label style="color: #f0b90b; font-size: 14px;"><b>Digital eRupee Wallet Address</b></label>
-            <input type="text" name="erupee_address" placeholder="Enter Digital eRupee Wallet Address" value="<%= user.bank_details ? user.bank_details.erupee_address : '' %>">
-
-            <label style="color: #00ffcc; font-size: 14px;"><b>Upload Digital eRupee QR Code Image</b></label>
-            <input type="file" name="qr_image" accept="image/*" style="background: #333;">
-            <% if (user.bank_details && user.bank_details.qr_image) { %>
-                <p style="font-size: 12px; color: #aaa;">Current QR: <a href="/uploads/<%= user.bank_details.qr_image %>" target="_blank" style="color: #00ffcc;">View QR</a></p>
+            <% if (success) { %>
+                <div class="alert-success">Request submitted successfully!</div>
+            <% } %>
+            <% if (error) { %>
+                <div class="alert-error">Insufficient balance or incorrect details!</div>
             <% } %>
 
-            <button type="submit" style="background: #22c55e; color: white; margin-top: 10px;">Save Details & QR</button>
-        </form>
+            <!-- Saved Payout Methods Display -->
+            <% if (user.bank_details && (user.bank_details.account_no  user.bank_details.upi_id  user.bank_details.wallet_address)) { %>
+                <div class="saved-details">
+                    <strong>📌 Saved Payout Details:</strong>
+                    <% if(user.bank_details.account_no) { %>
+                        <p><strong>Bank Account:</strong> <%= user.bank_details.bank_name %> | A/C: <%= user.bank_details.account_no %> | IFSC: <%= user.bank_details.ifsc %></p>
+                    <% } %>
+                    <% if(user.bank_details.upi_id) { %>
+                        <p><strong>UPI ID:</strong> <%= user.bank_details.upi_id %></p>
+                    <% } %>
+                    <% if(user.bank_details.wallet_address) { %>
+                        <p><strong>Digital Wallet:</strong> <%= user.bank_details.wallet_address %></p>
+                    <% } %>
+                    <% if(user.bank_details.qr_data) { %>
+                        <p><strong>QR Code / ID:</strong> <%= user.bank_details.qr_data %></p><% } %>
+                    <button type="button" onclick="toggleEdit()" style="background: none; border: none; color: #007bff; cursor: pointer; font-weight: bold; margin-top: 8px; font-size: 12px;">✏️ Update Payout Details</button>
+                </div>
+            <% } %>
+
+            <!-- Form to Add/Edit Separate Payout Methods -->
+            <form action="/save-bank" method="POST" id="bankForm" style="<%= (user.bank_details && user.bank_details.account_no) ? 'display:none;' : '' %>">
+                <h4 style="margin-bottom: 10px; font-size: 14px; color: #007bff;">Configure Payout Options</h4>
+                
+                <div class="form-group">
+                    <label>Full Name</label>
+                    <input type="text" name="fullname" class="form-control" value="<%= user.bank_details ? user.bank_details.fullname : '' %>">
+                </div>
+                <div class="form-group">
+                    <label>Bank Name</label>
+                    <input type="text" name="bank_name" class="form-control" value="<%= user.bank_details ? user.bank_details.bank_name : '' %>" placeholder="e.g. SBI, HDFC">
+                </div>
+                <div class="form-group">
+                    <label>Bank Account Number</label>
+                    <input type="text" name="account_no" class="form-control" value="<%= user.bank_details ? user.bank_details.account_no : '' %>" placeholder="Account Number">
+                </div>
+                <div class="form-group">
+                    <label>IFSC Code</label>
+                    <input type="text" name="ifsc" class="form-control" value="<%= user.bank_details ? user.bank_details.ifsc : '' %>" placeholder="IFSC Code">
+                </div>
+                <div class="form-group">
+                    <label>UPI ID</label>
+                    <input type="text" name="upi_id" class="form-control" value="<%= user.bank_details ? user.bank_details.upi_id : '' %>" placeholder="username@upi">
+                </div>
+                <div class="form-group">
+                    <label>Digital Wallet / Crypto Address</label>
+                    <input type="text" name="wallet_address" class="form-control" value="<%= user.bank_details ? user.bank_details.wallet_address : '' %>" placeholder="TRC20 / Wallet Address">
+                </div>
+                <div class="form-group">
+                    <label>QR Code Data / UPI Number</label>
+                    <input type="text" name="qr_data" class="form-control" value="<%= user.bank_details ? user.bank_details.qr_data : '' %>" placeholder="QR details or phone number">
+                </div>
+
+                <button type="submit" class="btn" style="background: #28a745;">Save All Methods</button>
+            </form>
+
+            <!-- Withdraw Form -->
+            <% if (user.bank_details && (user.bank_details.account_no  user.bank_details.upi_id  user.bank_details.wallet_address)) { %>
+                <form action="/submit-withdraw" method="POST" style="margin-top: 15px;" onsubmit="prepareDetails(event)">
+                    <div class="form-group">
+                        <label>Withdraw Amount (USDT)</label>
+                        <input type="number" step="0.01" name="amount" class="form-control" placeholder="Enter amount" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Select Payout Method</label>
+                        <select name="method" id="withdrawMethod" class="form-control" onchange="updateDetailsField()">
+                            <option value="Bank Account">Bank Account</option>
+                            <option value="UPI ID">UPI ID</option>
+                            <option value="Digital Wallet">Digital Wallet</option>
+                            <option value="QR Code Payout">QR Code / UPI Number</option></select>
+                    </div>
+                    
+                    <input type="hidden" name="details" id="finalDetails">
+                    <button type="submit" class="btn">Submit Withdraw Request</button>
+                </form>
+            <% } %>
+        </div>
     </div>
 
-    <div class="card">
-        <h3>2. Request Withdrawal</h3>
-        <form action="/submit-withdraw" method="POST">
-            <label><b>Withdrawal Method</b></label>
-            <select name="method" required>
-                <option value="Bank / UPI">Bank Card / UPI</option>
-                <option value="Digital eRupee">Digital eRupee Wallet</option>
-            </select>
-
-            <label><b>Destination (Account / UPI / eRupee Address)</b></label>
-            <input type="text" name="details" placeholder="Enter Account No, UPI or eRupee Address" required>
-
-            <label><b>Amount (USDT)</b></label>
-            <input type="number" step="0.01" name="amount" placeholder="Enter amount to withdraw" required>
-
-            <button type="submit">Submit Withdrawal</button>
-        </form>
-
-        <a href="/" class="back">Back to Dashboard</a>
+    <div class="bottom-nav">
+        <a href="/" class="nav-item"><div>🏠</div>Home</a>
+        <a href="/deposit" class="nav-item"><div>🔄</div>Deposit</a>
+        <a href="/vip" class="nav-item"><div>👑</div>VIP</a>
+        <a href="/team" class="nav-item"><div>👥</div>Team</a>
+        <a href="/profile" class="nav-item"><div>👤</div>Me</a>
     </div>
 
+    <script>
+        const savedBank = <%- JSON.stringify(user.bank_details || {}) %>;
+
+        function toggleEdit() {
+            var form = document.getElementById('bankForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function prepareDetails(e) {
+            let method = document.getElementById('withdrawMethod').value;
+            let detailsStr = "";
+            if(method === "Bank Account") {
+                detailsStr = Bank: ${savedBank.bank_name}, A/C: ${savedBank.account_no}, IFSC: ${savedBank.ifsc}, Name: ${savedBank.fullname};
+            } else if(method === "UPI ID") {
+                detailsStr = UPI ID: ${savedBank.upi_id}, Name: ${savedBank.fullname};
+            } else if(method === "Digital Wallet") {
+                detailsStr = Wallet Address: ${savedBank.wallet_address};
+            } else {
+                detailsStr = QR Data: ${savedBank.qr_data}, Name: ${savedBank.fullname};
+            }
+            document.getElementById('finalDetails').value = detailsStr;
+        }
+    </script>
 </body>
 </html>
