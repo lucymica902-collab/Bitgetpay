@@ -109,7 +109,9 @@ app.post('/login', async (req, res) => {
     } catch (err) {
         res.render('user-login', { error: 'Something went wrong' });
     }
-});app.get('/logout', (req, res) => { req.session.user = null; res.redirect('/login'); });
+});
+
+app.get('/logout', (req, res) => { req.session.user = null; res.redirect('/login'); });
 
 app.get('/', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
@@ -147,7 +149,7 @@ app.post('/submit-vip-deposit', async (req, res) => {
         const { amount, txid, vip_level } = req.body;
         const newTx = new Transaction({
             id: Date.now(), phone: req.session.user.phone,
-            amount: parseFloat(amount), txid: ${txid} [VIP Level: ${vip_level}],
+            amount: parseFloat(amount), txid: `${txid} [VIP Level: ${vip_level}]`,
             date: new Date().toLocaleString(), status: 'Pending'
         });
         await newTx.save();
@@ -202,7 +204,8 @@ app.post('/save-bank', async (req, res) => {
 
         user.bank_details = { 
             fullname: fullname || '', 
-            bank_name: bank_name || '',account_no: account_no || '', 
+            bank_name: bank_name || '', 
+            account_no: account_no || '', 
             ifsc: ifsc || '', 
             upi_id: upi_id || '',
             wallet_address: wallet_address || '',
@@ -307,7 +310,9 @@ app.post('/admin/reject/:id', async (req, res) => {
         if (tx) { tx.status = 'Rejected'; await tx.save(); }
         res.redirect('/admin');
     } catch (err) { res.redirect('/admin'); }
-});app.post('/admin/withdraw/approve/:id', async (req, res) => {
+});
+
+app.post('/admin/withdraw/approve/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
         let users = await User.find({});
@@ -344,4 +349,4 @@ app.post('/admin/withdraw/reject/:id', async (req, res) => {
 app.get('/admin-logout', (req, res) => { req.session.admin = false; res.redirect('/admin-login'); });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => console.log(Server running on port ${PORT}));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
