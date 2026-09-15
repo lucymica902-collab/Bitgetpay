@@ -195,11 +195,11 @@ app.get('/withdraw', async (req, res) => {
     } catch (err) { res.redirect('/login'); }
 });
 
-// Save Separate Payout Methods (Bank, UPI, Wallet, QR)
+// Save or Update Payout Details (Bank, UPI, Digital Wallet / QR) completely
 app.post('/save-bank', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
-        const { fullname, bank_name, account_no, ifsc, upi_id, wallet_address, qr_data } = req.body;
+        const { fullname, bank_name, account_no, ifsc, upi_id, wallet_address } = req.body;
         let user = await User.findById(req.session.user._id);
 
         user.bank_details = { 
@@ -208,8 +208,7 @@ app.post('/save-bank', async (req, res) => {
             account_no: account_no || '', 
             ifsc: ifsc || '', 
             upi_id: upi_id || '',
-            wallet_address: wallet_address || '',
-            qr_data: qr_data || ''
+            wallet_address: wallet_address || ''
         };
         
         user.markModified('bank_details');
