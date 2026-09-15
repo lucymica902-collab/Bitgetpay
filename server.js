@@ -8,19 +8,12 @@ const app = express();
 const ADMIN_USERNAME = "bitpay008";
 const ADMIN_PASSWORD = "Bitpay002";
 
-// Secure MongoDB Connection URI
 const MONGO_URI = 'mongodb+srv://admin0207:Hukam02@cluster0.grxfume.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
 
-// Database Connection
 mongoose.connect(MONGO_URI)
-  .then(() => {
-    console.log('MongoDB Database Connected Successfully!');
-  })
-  .catch((err) => {
-    console.error('MongoDB Connection Error:', err);
-  });
+  .then(() => console.log('MongoDB Database Connected Successfully!'))
+  .catch((err) => console.error('MongoDB Connection Error:', err));
 
-// --- MONGODB SCHEMAS & MODELS ---
 const userSchema = new mongoose.Schema({
     id: Number,
     phone: { type: String, unique: true },
@@ -82,32 +75,22 @@ app.use(session({
     saveUninitialized: true
 }));
 
-// --- ROUTES ---
-app.get('/register', (req, res) => {
-    res.render('register', { error: null, ref: req.query.ref || '' });
-});
+app.get('/register', (req, res) => res.render('register', { error: null, ref: req.query.ref || '' }));
 
 app.post('/register', async (req, res) => {
     try {
         const { phone, password, referral_code } = req.body;
         const existingUser = await User.findOne({ phone });
-        if (existingUser) {
-            return res.render('register', { error: 'Phone number already registered', ref: '' });
-        }
+        if (existingUser) return res.render('register', { error: 'Phone number already registered', ref: '' });
+        
         const myReferralCode = 'BP' + Math.floor(100000 + Math.random() * 900000);
         const newUser = new User({
-            id: Date.now(),
-            phone,
-            password,
-            balance: 0.00,
-            team_commission: 0.00,
-            referral_code: myReferralCode,
-            referred_by: referral_code || ''
+            id: Date.now(), phone, password, balance: 0.00,
+            team_commission: 0.00, referral_code: myReferralCode, referred_by: referral_code || ''
         });
         await newUser.save();
         res.redirect('/login');
     } catch (err) {
-        console.error(err);
         res.render('register', { error: 'Registration failed', ref: '' });
     }
 });
@@ -124,15 +107,9 @@ app.post('/login', async (req, res) => {
             res.render('user-login', { error: 'Invalid phone number or password' });
         }
     } catch (err) {
-        console.error(err);
         res.render('user-login', { error: 'Something went wrong' });
     }
-});
-
-app.get('/logout', (req, res) => {
-    req.session.user = null;
-    res.redirect('/login');
-});
+});app.get('/logout', (req, res) => { req.session.user = null; res.redirect('/login'); });
 
 app.get('/', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
@@ -140,9 +117,7 @@ app.get('/', async (req, res) => {
         const user = await User.findById(req.session.user._id);
         req.session.user = user;
         res.render('index', { user, settings: await getSettings() });
-    } catch (err) {
-        res.redirect('/login');
-    }
+    } catch (err) { res.redirect('/login'); }
 });
 
 app.get('/deposit', async (req, res) => {
@@ -150,52 +125,34 @@ app.get('/deposit', async (req, res) => {
     try {
         const user = await User.findById(req.session.user._id);
         res.render('deposit', { user, settings: await getSettings(), success: req.query.success || null });
-    } catch (err) {
-        res.redirect('/login');
-    }
+    } catch (err) { res.redirect('/login'); }
 });
 
 app.post('/submit-deposit', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const { amount, txid } = req.body;
-        
         const newTx = new Transaction({
-            id: Date.now(),
-            phone: req.session.user.phone,
-            amount: parseFloat(amount),
-            txid,
-            date: new Date().toLocaleString(),
-            status: 'Pending'
+            id: Date.now(), phone: req.session.user.phone,
+            amount: parseFloat(amount), txid, date: new Date().toLocaleString(), status: 'Pending'
         });
         await newTx.save();
         res.redirect('/deposit?success=true');
-    } catch (err) {
-        console.error(err);
-        res.redirect('/deposit?error=true');
-    }
+    } catch (err) { res.redirect('/deposit?error=true'); }
 });
 
-// Direct VIP Level Recharge Route
 app.post('/submit-vip-deposit', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const { amount, txid, vip_level } = req.body;
-        
         const newTx = new Transaction({
-            id: Date.now(),
-            phone: req.session.user.phone,
-            amount: parseFloat(amount),
-            txid: `${txid} [VIP Level: ${vip_level}]`,
-            date: new Date().toLocaleString(),
-            status: 'Pending'
+            id: Date.now(), phone: req.session.user.phone,
+            amount: parseFloat(amount), txid: ${txid} [VIP Level: ${vip_level}],
+            date: new Date().toLocaleString(), status: 'Pending'
         });
         await newTx.save();
         res.redirect('/vip?success=true');
-    } catch (err) {
-        console.error(err);
-        res.redirect('/vip?error=true');
-    }
+    } catch (err) { res.redirect('/vip?error=true'); }
 });
 
 app.get('/vip', async (req, res) => {
@@ -203,31 +160,7 @@ app.get('/vip', async (req, res) => {
     try {
         const user = await User.findById(req.session.user._id);
         res.render('vip', { user, settings: await getSettings(), success: req.query.success || null });
-    } catch (err) {
-        res.redirect('/login');
-    }
-});
-
-app.post('/buy-vip', async (req, res) => {
-    if (!req.session.user) return res.redirect('/login');
-    try {
-        const { level, price, daily, days } = req.body;
-        let user = await User.findById(req.session.user._id);
-
-        if (user.balance >= parseFloat(price)) {
-            user.balance -= parseFloat(price);
-            if (!user.investments) user.investments = [];
-            user.investments.push({ level, price, daily, days, date: new Date().toLocaleString() });
-            await user.save();
-            req.session.user = user;
-            res.redirect('/vip?success=true');
-        } else {
-            res.redirect('/vip?error=true');
-        }
-    } catch (err) {
-        console.error(err);
-        res.redirect('/vip?error=true');
-    }
+    } catch (err) { res.redirect('/login'); }
 });
 
 app.get('/team', async (req, res) => {
@@ -239,9 +172,7 @@ app.get('/team', async (req, res) => {
         let teamA_codes = teamA.map(u => u.referral_code);
         let teamB = users.filter(u => teamA_codes.includes(u.referred_by));
         res.render('team', { user, teamA, teamB });
-    } catch (err) {
-        res.redirect('/login');
-    }
+    } catch (err) { res.redirect('/login'); }
 });
 
 app.get('/profile', async (req, res) => {
@@ -250,9 +181,7 @@ app.get('/profile', async (req, res) => {
         const user = await User.findById(req.session.user._id);
         req.session.user = user;
         res.render('profile', { user, settings: await getSettings() });
-    } catch (err) {
-        res.redirect('/login');
-    }
+    } catch (err) { res.redirect('/login'); }
 });
 
 app.get('/withdraw', async (req, res) => {
@@ -261,25 +190,30 @@ app.get('/withdraw', async (req, res) => {
         const user = await User.findById(req.session.user._id);
         req.session.user = user;
         res.render('withdraw', { user, success: req.query.success, error: req.query.error });
-    } catch (err) {
-        res.redirect('/login');
-    }
+    } catch (err) { res.redirect('/login'); }
 });
 
+// Save Separate Payout Methods (Bank, UPI, Wallet, QR)
 app.post('/save-bank', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
-        const { fullname, bank_name, account_no, ifsc_upi, erupee_address } = req.body;
+        const { fullname, bank_name, account_no, ifsc, upi_id, wallet_address, qr_data } = req.body;
         let user = await User.findById(req.session.user._id);
 
-        user.bank_details = { fullname, bank_name, account_no, ifsc_upi, erupee_address, qr_image: '' };
+        user.bank_details = { 
+            fullname: fullname || '', 
+            bank_name: bank_name || '',account_no: account_no || '', 
+            ifsc: ifsc || '', 
+            upi_id: upi_id || '',
+            wallet_address: wallet_address || '',
+            qr_data: qr_data || ''
+        };
+        
+        user.markModified('bank_details');
         await user.save();
         req.session.user = user;
         res.redirect('/withdraw?success=bank');
-    } catch (err) {
-        console.error(err);
-        res.redirect('/withdraw?error=true');
-    }
+    } catch (err) { res.redirect('/withdraw?error=true'); }
 });
 
 app.post('/submit-withdraw', async (req, res) => {
@@ -293,12 +227,8 @@ app.post('/submit-withdraw', async (req, res) => {
             user.balance -= withdrawAmount;
             if (!user.withdraw_history) user.withdraw_history = [];
             user.withdraw_history.unshift({
-                id: Date.now(),
-                amount: withdrawAmount,
-                method,
-                details,
-                date: new Date().toLocaleString(),
-                status: 'Pending'
+                id: Date.now(), amount: withdrawAmount, method, details,
+                date: new Date().toLocaleString(), status: 'Pending'
             });
             await user.save();
             req.session.user = user;
@@ -306,10 +236,7 @@ app.post('/submit-withdraw', async (req, res) => {
         } else {
             res.redirect('/withdraw?error=true');
         }
-    } catch (err) {
-        console.error(err);
-        res.redirect('/withdraw?error=true');
-    }
+    } catch (err) { res.redirect('/withdraw?error=true'); }
 });
 
 app.get('/admin-login', (req, res) => res.render('admin-login', { error: null }));
@@ -330,9 +257,7 @@ app.get('/admin', async (req, res) => {
         const users = await User.find({});
         const settings = await getSettings();
         res.render('admin', { transactions, users, settings });
-    } catch (err) {
-        res.redirect('/admin-login');
-    }
+    } catch (err) { res.redirect('/admin-login'); }
 });
 
 app.post('/admin/settings', async (req, res) => {
@@ -343,7 +268,6 @@ app.post('/admin/settings', async (req, res) => {
         settings.trc_address = trc_address;
         settings.usdt_rate = usdt_rate;
         settings.support_link = support_link;
-
         if (v_price && Array.isArray(v_price)) {
             for (let i = 0; i < settings.vip_levels.length; i++) {
                 settings.vip_levels[i].price = v_price[i];
@@ -354,10 +278,7 @@ app.post('/admin/settings', async (req, res) => {
         settings.markModified('vip_levels');
         await settings.save();
         res.redirect('/admin');
-    } catch (err) {
-        console.error(err);
-        res.redirect('/admin');
-    }
+    } catch (err) { res.redirect('/admin'); }
 });
 
 app.post('/admin/verify/:id', async (req, res) => {
@@ -367,72 +288,37 @@ app.post('/admin/verify/:id', async (req, res) => {
         if (tx && tx.status === 'Pending') {
             tx.status = 'Approved & Verified';
             await tx.save();
-
             let user = await User.findOne({ phone: tx.phone });
             if (user) {
                 user.balance += tx.amount;
                 if (!user.deposit_history) user.deposit_history = [];
                 user.deposit_history.push({ amount: tx.amount, date: tx.date });
-
-                if (user.referred_by) {
-                    let referrerA = await User.findOne({ referral_code: user.referred_by });
-                    if (referrerA) {
-                        referrerA.team_commission += (tx.amount * 0.003);
-                        if (tx.amount >= 100) referrerA.balance += 5;
-                        await referrerA.save();
-
-                        if (referrerA.referred_by) {
-                            let referrerB = await User.findOne({ referral_code: referrerA.referred_by });
-                            if (referrerB) {
-                                referrerB.team_commission += (tx.amount * 0.001);
-                                await referrerB.save();
-                            }
-                        }
-                    }
-                }
                 await user.save();
             }
         }
         res.redirect('/admin');
-    } catch (err) {
-        console.error(err);
-        res.redirect('/admin');
-    }
+    } catch (err) { res.redirect('/admin'); }
 });
 
 app.post('/admin/reject/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
         let tx = await Transaction.findOne({ id: req.params.id });
-        if (tx) { 
-            tx.status = 'Rejected'; 
-            await tx.save(); 
-        }
+        if (tx) { tx.status = 'Rejected'; await tx.save(); }
         res.redirect('/admin');
-    } catch (err) {
-        res.redirect('/admin');
-    }
-});
-
-app.post('/admin/withdraw/approve/:id', async (req, res) => {
+    } catch (err) { res.redirect('/admin'); }
+});app.post('/admin/withdraw/approve/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
         let users = await User.find({});
         for (let user of users) {
             if (user.withdraw_history) {
                 let tx = user.withdraw_history.find(t => t.id == req.params.id);
-                if (tx) { 
-                    tx.status = 'Approved'; 
-                    user.markModified('withdraw_history');
-                    await user.save();
-                    break; 
-                }
+                if (tx) { tx.status = 'Approved'; user.markModified('withdraw_history'); await user.save(); break; }
             }
         }
         res.redirect('/admin');
-    } catch (err) {
-        res.redirect('/admin');
-    }
+    } catch (err) { res.redirect('/admin'); }
 });
 
 app.post('/admin/withdraw/reject/:id', async (req, res) => {
@@ -452,17 +338,10 @@ app.post('/admin/withdraw/reject/:id', async (req, res) => {
             }
         }
         res.redirect('/admin');
-    } catch (err) {
-        res.redirect('/admin');
-    }
+    } catch (err) { res.redirect('/admin'); }
 });
 
-app.get('/admin-logout', (req, res) => {
-    req.session.admin = false;
-    res.redirect('/admin-login');
-});
+app.get('/admin-logout', (req, res) => { req.session.admin = false; res.redirect('/admin-login'); });
 
 const PORT = process.env.PORT || 10000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(PORT, () => console.log(Server running on port ${PORT}));
