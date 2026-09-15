@@ -27,20 +27,24 @@
             <div class="alert success">Payout details saved successfully!</div>
         <% } %>
 
+        <!-- User ki khud ki saved details yahan dikhengi -->
         <% if (user.bank_details && (user.bank_details.account_no || user.bank_details.upi_id || user.bank_details.wallet_address)) { %>
             <div class="saved-details">
-                <h3>Saved Payout Methods:</h3>
-                <% if(user.bank_details.fullname) { %><strong>Name:</strong> <%= user.bank_details.fullname %><br><% } %>
-                <% if(user.bank_details.bank_name) { %><strong>Bank:</strong> <%= user.bank_details.bank_name %> (<%= user.bank_details.account_no %>)<br><% } %>
-                <% if(user.bank_details.ifsc) { %><strong>IFSC:</strong> <%= user.bank_details.ifsc %><br><% } %>
+                <h3>Your Saved Withdrawal Details:</h3>
+                <% if(user.bank_details.fullname) { %><strong>Full Name:</strong> <%= user.bank_details.fullname %><br><% } %>
+                <% if(user.bank_details.bank_name) { %><strong>Bank Name:</strong> <%= user.bank_details.bank_name %><br><% } %>
+                <% if(user.bank_details.account_no) { %><strong>Account No:</strong> <%= user.bank_details.account_no %><br><% } %>
+                <% if(user.bank_details.ifsc) { %><strong>IFSC Code:</strong> <%= user.bank_details.ifsc %><br><% } %>
                 <% if(user.bank_details.upi_id) { %><strong>UPI ID:</strong> <%= user.bank_details.upi_id %><br><% } %>
-                <% if(user.bank_details.wallet_address) { %><strong>Wallet Address:</strong> <%= user.bank_details.wallet_address %><br><% } %>
+                <% if(user.bank_details.wallet_address) { %><strong>Digital Wallet / QR Info:</strong> <%= user.bank_details.wallet_address %><br><% } %>
+                <p style="font-size: 12px; color: #aaa; margin-top: 8px; margin-bottom: 0;">*Nayi details bhar kar save karne par purani wali automatically update ho jayengi.</p>
             </div>
         <% } %>
 
         <form action="/save-bank" method="POST">
+            <h3 style="color: #38bdf8; font-size: 15px; margin-bottom: 5px;">1. Bank Account Details</h3>
             <label>Full Name</label>
-            <input type="text" name="fullname" value="<%= user.bank_details ? user.bank_details.fullname : '' %>" placeholder="Enter Full Name" required>
+            <input type="text" name="fullname" value="<%= user.bank_details ? user.bank_details.fullname : '' %>" placeholder="Enter Full Name">
 
             <label>Bank Name</label>
             <input type="text" name="bank_name" value="<%= user.bank_details ? user.bank_details.bank_name : '' %>" placeholder="Enter Bank Name">
@@ -51,13 +55,19 @@
             <label>IFSC Code</label>
             <input type="text" name="ifsc" value="<%= user.bank_details ? user.bank_details.ifsc : '' %>" placeholder="Enter IFSC Code">
 
+            <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
+
+            <h3 style="color: #38bdf8; font-size: 15px; margin-bottom: 5px;">2. UPI ID Details</h3>
             <label>UPI ID</label>
-            <input type="text" name="upi_id" value="<%= user.bank_details ? user.bank_details.upi_id : '' %>" placeholder="Enter UPI ID (e.g. ybl@paytm)">
+            <input type="text" name="upi_id" value="<%= user.bank_details ? user.bank_details.upi_id : '' %>" placeholder="Enter UPI ID (e.g. user@paytm)">
 
-            <label>USDT / Crypto Wallet Address</label>
-            <input type="text" name="wallet_address" value="<%= user.bank_details ? user.bank_details.wallet_address : '' %>" placeholder="Enter TRC20/Crypto Address">
+            <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
 
-            <button type="submit">Save All Methods</button>
+            <h3 style="color: #38bdf8; font-size: 15px; margin-bottom: 5px;">3. Digital Wallet / QR Address</h3>
+            <label>Digital Wallet / QR Details</label>
+            <input type="text" name="wallet_address" value="<%= user.bank_details ? user.bank_details.wallet_address : '' %>" placeholder="Enter Digital Wallet address or QR info">
+
+            <button type="submit">Save / Update All Details</button>
         </form>
     </div>
 
@@ -80,11 +90,11 @@
             <select name="method" required>
                 <option value="Bank Transfer">Bank Transfer</option>
                 <option value="UPI">UPI</option>
-                <option value="Crypto Wallet">Crypto Wallet</option>
+                <option value="Digital Wallet / QR">Digital Wallet / QR</option>
             </select>
 
-            <label>Confirm Target Details (Account / UPI / Wallet)</label>
-            <input type="text" name="details" placeholder="Re-enter your payout account/UPI/wallet" required>
+            <label>Confirm Target Details</label>
+            <input type="text" name="details" placeholder="Re-enter your Account No, UPI ID or Wallet Info" required>
 
             <button type="submit" style="background: #10b981; color: white;">Withdraw Now</button>
         </form>
