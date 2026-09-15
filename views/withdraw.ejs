@@ -28,7 +28,7 @@
         <% } %>
 
         <!-- User ki khud ki saved details yahan dikhengi -->
-        <% if (user.bank_details && (user.bank_details.account_no || user.bank_details.upi_id || user.bank_details.qr_details)) { %>
+        <% if (user.bank_details && (user.bank_details.account_no || user.bank_details.upi_id || user.bank_details.qr_image)) { %>
             <div class="saved-details">
                 <h3>Your Saved Withdrawal Details:</h3>
                 <% if(user.bank_details.fullname) { %><strong>Full Name:</strong> <%= user.bank_details.fullname %><br><% } %>
@@ -36,8 +36,11 @@
                 <% if(user.bank_details.account_no) { %><strong>Account No:</strong> <%= user.bank_details.account_no %><br><% } %>
                 <% if(user.bank_details.ifsc) { %><strong>IFSC Code:</strong> <%= user.bank_details.ifsc %><br><% } %>
                 <% if(user.bank_details.upi_id) { %><strong>UPI ID:</strong> <%= user.bank_details.upi_id %><br><% } %>
-                <% if(user.bank_details.qr_details) { %><strong>Digital / UPI QR Link or Details:</strong> <%= user.bank_details.qr_details %><br><% } %>
-                <p style="font-size: 12px; color: #aaa; margin-top: 8px; margin-bottom: 0;">*Nayi details bhar kar save karne par purani wali automatically update ho jayengi.</p>
+                <% if(user.bank_details.qr_image) { %>
+                    <strong>Uploaded QR Code:</strong><br>
+                    <img src="<%= user.bank_details.qr_image %>" alt="Saved QR" style="max-width: 120px; margin-top: 5px; border-radius: 6px; border: 1px solid #555;"><br>
+                <% } %>
+                <p style="font-size: 12px; color: #aaa; margin-top: 8px; margin-bottom: 0;">*Nayi details ya QR upload karke save karne par purani wali automatically update ho jayengi.</p>
             </div>
         <% } %>
 
@@ -63,9 +66,10 @@
 
             <hr style="border: 0; border-top: 1px solid #444; margin: 20px 0;">
 
-            <h3 style="color: #38bdf8; font-size: 15px; margin-bottom: 5px;">3. UPI / Digital QR Upload Option</h3>
-            <label>QR Code Image Link or Info (e.g. ImgBB URL or UPI QR ID)</label>
-            <input type="text" name="qr_details" value="<%= user.bank_details ? user.bank_details.qr_details : '' %>" placeholder="Enter QR code image link or details">
+            <h3 style="color: #38bdf8; font-size: 15px; margin-bottom: 5px;">3. UPI / Digital QR Code Upload</h3>
+            <label>Select QR Image from Device</label>
+            <input type="file" accept="image/*" onchange="encodeImageFileAsURL(this)" style="padding: 10px;">
+            <input type="hidden" name="qr_image" id="qr_image_input" value="<%= user.bank_details ? user.bank_details.qr_image : '' %>">
 
             <button type="submit">Save / Update All Details</button>
         </form>
@@ -94,7 +98,7 @@
             </select>
 
             <label>Confirm Target Details</label>
-            <input type="text" name="details" placeholder="Re-enter your Account No, UPI ID or QR details" required>
+            <input type="text" name="details" placeholder="Re-enter your Account No or UPI ID" required>
 
             <button type="submit" style="background: #10b981; color: white;">Withdraw Now</button>
         </form>
@@ -117,6 +121,19 @@
         
         <a href="/" class="back">← Back to Dashboard</a>
     </div>
+
+    <script>
+    function encodeImageFileAsURL(element) {
+        let file = element.files[0];
+        if (file) {
+            let reader = new FileReader();
+            reader.onloadend = function() {
+                document.getElementById('qr_image_input').value = reader.result;
+            }
+            reader.readAsDataURL(file);
+        }
+    }
+    </script>
 
 </body>
 </html>
