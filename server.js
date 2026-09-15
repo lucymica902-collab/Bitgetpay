@@ -63,8 +63,8 @@ async function getSettings() {
     return setting;
 }
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json({ limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
@@ -195,11 +195,11 @@ app.get('/withdraw', async (req, res) => {
     } catch (err) { res.redirect('/login'); }
 });
 
-// Save or Update Payout Details (Bank, UPI, QR Code) completely
+// Save or Update Payout Details including QR Image Upload
 app.post('/save-bank', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
-        const { fullname, bank_name, account_no, ifsc, upi_id, qr_details } = req.body;
+        const { fullname, bank_name, account_no, ifsc, upi_id, qr_image } = req.body;
         let user = await User.findById(req.session.user._id);
 
         user.bank_details = { 
@@ -208,7 +208,7 @@ app.post('/save-bank', async (req, res) => {
             account_no: account_no || '', 
             ifsc: ifsc || '', 
             upi_id: upi_id || '',
-            qr_details: qr_details || ''
+            qr_image: qr_image || (user.bank_details ? user.bank_details.qr_image : '')
         };
         
         user.markModified('bank_details');
