@@ -39,7 +39,7 @@
                 <input type="file" accept="image/*" onchange="encodeDepositQR(this)" style="padding: 5px;">
                 <input type="hidden" name="deposit_qr" id="deposit_qr_input" value="<%= settings.deposit_qr %>">
 
-                <label style="margin-top: 10px; display: block;">USDT Rate:</label>
+                <label style="margin-top: 10px; display: block;">USDT Rate (1 USDT = ? INR):</label>
                 <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>">
 
                 <label style="margin-top: 10px; display: block;">Support Link:</label>
@@ -65,7 +65,7 @@
             <table>
                 <tr>
                     <th>Phone</th>
-                    <th>Amount</th>
+                    <th>USDT Amount</th>
                     <th>TXID / Details</th>
                     <th>Date</th>
                     <th>Status</th>
@@ -78,7 +78,7 @@
                     <% pendingTx.forEach(tx => { %>
                         <tr>
                             <td><%= tx.phone %></td>
-                            <td>$<%= tx.amount %></td>
+                            <td><%= tx.amount %> USDT <br><small style="color: #888;">(≈ ₹<%= (tx.amount * parseFloat(settings.usdt_rate || 108.12)).toFixed(2) %>)</small></td>
                             <td style="word-break: break-all;"><%= tx.txid %></td>
                             <td><%= tx.date %></td>
                             <td style="color: #eab308;"><%= tx.status %></td>
@@ -102,15 +102,15 @@
             <table>
                 <tr>
                     <th>Phone</th>
-                    <th>Balance</th>
+                    <th>Balance (INR)</th>
                     <th>Team Commission</th>
                     <th>Referral Code</th>
                 </tr>
                 <% users.forEach(u => { %>
                     <tr>
                         <td><%= u.phone %></td>
-                        <td>$<%= u.balance.toFixed(2) %></td>
-                        <td>$<%= u.team_commission.toFixed(2) %></td>
+                        <td>₹<%= u.balance ? u.balance.toFixed(2) : '0.00' %></td>
+                        <td>₹<%= u.team_commission ? u.team_commission.toFixed(2) : '0.00' %></td>
                         <td><%= u.referral_code %></td>
                     </tr>
                 <% }) %>
