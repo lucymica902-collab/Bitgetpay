@@ -96,6 +96,56 @@
             </table>
         </div>
 
+        <!-- Withdrawal Requests Approvals -->
+        <div class="card">
+            <h3>Pending Withdrawal Requests</h3>
+            <table>
+                <tr>
+                    <th>Phone</th>
+                    <th>Amount (INR)</th>
+                    <th>Method / Details</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+                <% 
+                    let allWithdrawals = [];
+                    if (users && users.length > 0) {
+                        users.forEach(u => {
+                            if (u.withdraw_history && u.withdraw_history.length > 0) {
+                                u.withdraw_history.forEach(w => {
+                                    allWithdrawals.push({ ...w, userPhone: u.phone });
+                                });
+                            }
+                        });
+                    }
+                    allWithdrawals.sort((a, b) => b.id - a.id);
+                    let pendingWithdrawals = allWithdrawals.filter(w => w.status === 'Pending');
+                %>
+                <% if (pendingWithdrawals.length === 0) { %>
+                    <tr><td colspan="6" style="text-align: center; color: #888;">No pending withdrawals</td></tr>
+                <% } else { %>
+                    <% pendingWithdrawals.forEach(w => { %>
+                        <tr>
+                            <td><%= w.userPhone %></td>
+                            <td>₹<%= w.amount.toFixed(2) %></td>
+                            <td style="word-break: break-all;"><b><%= w.method %></b>: <%= w.details %></td>
+                            <td><%= w.date %></td>
+                            <td style="color: #eab308;"><%= w.status %></td>
+                            <td>
+                                <form action="/admin/withdraw/approve/<%= w.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-success">Approve</button>
+                                </form>
+                                <form action="/admin/withdraw/reject/<%= w.id %>" method="POST" style="display:inline;">
+                                    <button type="submit" class="btn-danger">Reject</button>
+                                </form>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </table>
+        </div>
+
         <!-- Users List -->
         <div class="card">
             <h3>All Registered Users (<%= users.length %>)</h3>
