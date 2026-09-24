@@ -131,17 +131,34 @@ app.get('/deposit', async (req, res) => {
     } catch (err) { res.redirect('/login'); }
 });
 
+// Deposit Submit Route (Added debugging logs)
 app.post('/submit-deposit', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const { amount, txid } = req.body;
+        console.log("Deposit Request Received:", req.body);
+
+        if (!amount || !txid) {
+            console.log("Error: Amount ya TXID missing hai!");
+            return res.redirect('/deposit?error=missing');
+        }
+
         const newTx = new Transaction({
-            id: Date.now(), phone: req.session.user.phone,
-            amount: parseFloat(amount), txid, date: new Date().toLocaleString(), status: 'Pending'
+            id: Date.now(), 
+            phone: req.session.user.phone,
+            amount: parseFloat(amount), 
+            txid, 
+            date: new Date().toLocaleString(), 
+            status: 'Pending'
         });
+        
         await newTx.save();
+        console.log("Deposit Transaction Saved Successfully in DB!");
         res.redirect('/deposit?success=true');
-    } catch (err) { res.redirect('/deposit?error=true'); }
+    } catch (err) { 
+        console.error("Deposit Error:", err);
+        res.redirect('/deposit?error=true'); 
+    }
 });
 
 app.post('/submit-vip-deposit', async (req, res) => {
@@ -292,7 +309,6 @@ app.post('/admin/settings', async (req, res) => {
     }
 });
 
-// Yahan par USDT amount ko Admin ke set kiye hue 'usdt_rate' se multiply karke INR balance mein convert kiya gaya hai
 app.post('/admin/verify/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
@@ -303,14 +319,10 @@ app.post('/admin/verify/:id', async (req, res) => {
             
             let user = await User.findOne({ phone: tx.phone });
             if (user) {
-                // Settings se current USDT rate fetch kar rahe hain
                 let settings = await getSettings();
                 let rate = parseFloat(settings.usdt_rate) || 108.12;
                 
-                // Deposit ki gayi USDT ko INR rate se multiply kiya
                 let convertedINR = tx.amount * rate;
-
-                // User ke balance mein INR add ho jayega
                 user.balance += convertedINR;
                 
                 if (!user.deposit_history) user.deposit_history = [];
