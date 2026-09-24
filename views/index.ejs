@@ -22,10 +22,12 @@
         <p style="color: #aaa; font-size: 14px;">Live USDT Rate</p>
         <h2 style="color: #f0b90b; margin-top: 5px;">1 USDT = ₹<%= settings.usdt_rate %></h2>
         <hr style="border: 0; border-top: 1px solid #333;">
+        
         <p style="color: #aaa; font-size: 14px;">Total Balance</p>
-        <h2 style="color: #00ffcc;"><%= user.balance.toFixed(2) %> USDT</h2>
+        <h2 style="color: #00ffcc;">₹<%= user.balance ? user.balance.toFixed(2) : '0.00' %></h2>
+        
         <p style="color: #aaa; font-size: 14px;">Team Commission</p>
-        <h3 style="color: #38bdf8;"><%= user.team_commission.toFixed(2) %> USDT</h3>
+        <h3 style="color: #38bdf8;">₹<%= user.team_commission ? user.team_commission.toFixed(2) : '0.00' %></h3>
 
         <a href="/deposit" class="btn-primary">Top Up / Deposit</a>
         <a href="/withdraw" class="btn-success">Withdrawal & Bank Card</a>
