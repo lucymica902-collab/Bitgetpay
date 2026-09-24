@@ -131,17 +131,11 @@ app.get('/deposit', async (req, res) => {
     } catch (err) { res.redirect('/login'); }
 });
 
-// Deposit Submit Route (Added debugging logs)
 app.post('/submit-deposit', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
         const { amount, txid } = req.body;
-        console.log("Deposit Request Received:", req.body);
-
-        if (!amount || !txid) {
-            console.log("Error: Amount ya TXID missing hai!");
-            return res.redirect('/deposit?error=missing');
-        }
+        if (!amount || !txid) return res.redirect('/deposit?error=missing');
 
         const newTx = new Transaction({
             id: Date.now(), 
@@ -153,10 +147,8 @@ app.post('/submit-deposit', async (req, res) => {
         });
         
         await newTx.save();
-        console.log("Deposit Transaction Saved Successfully in DB!");
         res.redirect('/deposit?success=true');
     } catch (err) { 
-        console.error("Deposit Error:", err);
         res.redirect('/deposit?error=true'); 
     }
 });
@@ -251,6 +243,7 @@ app.post('/submit-withdraw', async (req, res) => {
                 id: Date.now(), amount: withdrawAmount, method, details,
                 date: new Date().toLocaleString(), status: 'Pending'
             });
+            user.markModified('withdraw_history');
             await user.save();
             req.session.user = user;
             res.redirect('/withdraw?success=true');
@@ -288,9 +281,7 @@ app.post('/admin/settings', async (req, res) => {
         let settings = await getSettings();
         
         settings.trc_address = trc_address;
-        if (deposit_qr) {
-            settings.deposit_qr = deposit_qr;
-        }
+        if (deposit_qr) settings.deposit_qr = deposit_qr;
         settings.usdt_rate = usdt_rate;
         settings.support_link = support_link;
         
@@ -326,7 +317,13 @@ app.post('/admin/verify/:id', async (req, res) => {
                 user.balance += convertedINR;
                 
                 if (!user.deposit_history) user.deposit_history = [];
-                user.deposit_history.push({ amount: convertedINR, usdt_amount: tx.amount, date: tx.date });
+                user.deposit_history.push({ 
+                    amount: convertedINR, 
+                    usdt_amount: tx.amount, 
+                    date: tx.date,
+                    txid: tx.txid 
+                });
+                user.markModified('deposit_history');
                 await user.save();
             }
         }
@@ -343,6 +340,7 @@ app.post('/admin/reject/:id', async (req, res) => {
     } catch (err) { res.redirect('/admin'); }
 });
 
+// Admin Withdrawal Approve Route
 app.post('/admin/withdraw/approve/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
@@ -350,13 +348,19 @@ app.post('/admin/withdraw/approve/:id', async (req, res) => {
         for (let user of users) {
             if (user.withdraw_history) {
                 let tx = user.withdraw_history.find(t => t.id == req.params.id);
-                if (tx) { tx.status = 'Approved'; user.markModified('withdraw_history'); await user.save(); break; }
+                if (tx) { 
+                    tx.status = 'Approved'; 
+                    user.markModified('withdraw_history'); 
+                    await user.save(); 
+                    break; 
+                }
             }
         }
         res.redirect('/admin');
     } catch (err) { res.redirect('/admin'); }
 });
 
+// Admin Withdrawal Reject Route (Refunds balance back to user)
 app.post('/admin/withdraw/reject/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
@@ -366,7 +370,7 @@ app.post('/admin/withdraw/reject/:id', async (req, res) => {
                 let tx = user.withdraw_history.find(t => t.id == req.params.id);
                 if (tx && tx.status === 'Pending') {
                     tx.status = 'Rejected';
-                    user.balance += tx.amount;
+                    user.balance += tx.amount; // Refund amount back
                     user.markModified('withdraw_history');
                     await user.save();
                     break;
