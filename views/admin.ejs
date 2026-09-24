@@ -104,6 +104,7 @@
                     <th>Phone</th>
                     <th>Amount (INR)</th>
                     <th>Method / Details</th>
+                    <th>QR / Proof</th>
                     <th>Date</th>
                     <th>Status</th>
                     <th>Action</th>
@@ -123,13 +124,22 @@
                     let pendingWithdrawals = allWithdrawals.filter(w => w.status === 'Pending');
                 %>
                 <% if (pendingWithdrawals.length === 0) { %>
-                    <tr><td colspan="6" style="text-align: center; color: #888;">No pending withdrawals</td></tr>
+                    <tr><td colspan="7" style="text-align: center; color: #888;">No pending withdrawals</td></tr>
                 <% } else { %>
                     <% pendingWithdrawals.forEach(w => { %>
                         <tr>
                             <td><%= w.userPhone %></td>
                             <td>₹<%= w.amount.toFixed(2) %></td>
                             <td style="word-break: break-all;"><b><%= w.method %></b>: <%= w.details %></td>
+                            <td>
+                                <% if (w.qr_image) { %>
+                                    <a href="<%= w.qr_image %>" target="_blank">
+                                        <img src="<%= w.qr_image %>" alt="User QR" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #555;">
+                                    </a>
+                                <% } else { %>
+                                    <span style="color: #888; font-size: 12px;">No QR</span>
+                                <% } %>
+                            </td>
                             <td><%= w.date %></td>
                             <td style="color: #eab308;"><%= w.status %></td>
                             <td>
