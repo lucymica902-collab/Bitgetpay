@@ -187,7 +187,6 @@ app.get('/profile', async (req, res) => {
     } catch (err) { res.redirect('/login'); }
 });
 
-// Withdraw Page Route Added
 app.get('/withdraw', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
@@ -293,6 +292,7 @@ app.post('/admin/settings', async (req, res) => {
     }
 });
 
+// Yahan par USDT amount ko Admin ke set kiye hue 'usdt_rate' se multiply karke INR balance mein convert kiya gaya hai
 app.post('/admin/verify/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
@@ -300,11 +300,21 @@ app.post('/admin/verify/:id', async (req, res) => {
         if (tx && tx.status === 'Pending') {
             tx.status = 'Approved & Verified';
             await tx.save();
+            
             let user = await User.findOne({ phone: tx.phone });
             if (user) {
-                user.balance += tx.amount;
+                // Settings se current USDT rate fetch kar rahe hain
+                let settings = await getSettings();
+                let rate = parseFloat(settings.usdt_rate) || 108.12;
+                
+                // Deposit ki gayi USDT ko INR rate se multiply kiya
+                let convertedINR = tx.amount * rate;
+
+                // User ke balance mein INR add ho jayega
+                user.balance += convertedINR;
+                
                 if (!user.deposit_history) user.deposit_history = [];
-                user.deposit_history.push({ amount: tx.amount, date: tx.date });
+                user.deposit_history.push({ amount: convertedINR, usdt_amount: tx.amount, date: tx.date });
                 await user.save();
             }
         }
