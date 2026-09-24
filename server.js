@@ -2,6 +2,8 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const mongoose = require('mongoose');
+const multer = require('multer');
+const fs = require('fs');
 
 const app = express();
 
@@ -13,6 +15,22 @@ const MONGO_URI = 'mongodb+srv://admin0207:Hukam02@cluster0.grxfume.mongodb.net/
 mongoose.connect(MONGO_URI)
   .then(() => console.log('MongoDB Database Connected Successfully!'))
   .catch((err) => console.error('MongoDB Connection Error:', err));
+
+// Multer & Uploads Directory Setup (Database ko bloat hone se bachane ke liye)
+const uploadDir = path.join(__dirname, 'public', 'uploads');
+if (!fs.existsSync(uploadDir)){
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, uploadDir);
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname));
+    }
+});
+const upload = multer({ storage: storage });
 
 const userSchema = new mongoose.Schema({
     id: Number,
@@ -229,10 +247,11 @@ app.post('/save-bank', async (req, res) => {
     } catch (err) { res.redirect('/withdraw?error=true'); }
 });
 
-app.post('/submit-withdraw', async (req, res) => {
+// Multer middleware added to handle direct file upload instead of Base64
+app.post('/submit-withdraw', upload.single('qr_image_file'), async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
-        const { amount, method, details, qr_image } = req.body;
+        const { amount, method, details } = req.body;
         let user = await User.findById(req.session.user._id);
         let withdrawAmount = parseFloat(amount);
 
@@ -240,8 +259,8 @@ app.post('/submit-withdraw', async (req, res) => {
             user.balance -= withdrawAmount;
             if (!user.withdraw_history) user.withdraw_history = [];
             
-            // Use newly uploaded QR or fallback to saved bank QR
-            let finalQR = qr_image || (user.bank_details ? user.bank_details.qr_image : '');
+            // File path save hoga database mein, base64 nahi
+            let finalQR = req.file ? ('/uploads/' + req.file.filename) : (user.bank_details ? user.bank_details.qr_image : '');
 
             user.withdraw_history.unshift({
                 id: Date.now(), 
@@ -283,14 +302,14 @@ app.get('/admin', async (req, res) => {
     } catch (err) { res.redirect('/admin-login'); }
 });
 
-app.post('/admin/settings', async (req, res) => {
+app.post('/admin/settings', upload.single('deposit_qr'), async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
-        const { trc_address, deposit_qr, usdt_rate, support_link, v_price, v_daily, v_days } = req.body;
+        const { trc_address, usdt_rate, support_link, v_price, v_daily, v_days } = req.body;
         let settings = await getSettings();
         
         settings.trc_address = trc_address;
-        if (deposit_qr) settings.deposit_qr = deposit_qr;
+        if (req.file) settings.deposit_qr = '/uploads/' + req.file.filename;
         settings.usdt_rate = usdt_rate;
         settings.support_link = support_link;
         
