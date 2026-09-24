@@ -210,7 +210,7 @@ app.get('/withdraw', async (req, res) => {
 app.post('/save-bank', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
-        const { fullname, bank_name, account_no, ifsc, upi_id, qr_image } = req.body;
+        const { fullname, bank_name, account_no, ifsc, upi_id } = req.body;
         let user = await User.findById(req.session.user._id);
 
         user.bank_details = { 
@@ -219,7 +219,7 @@ app.post('/save-bank', async (req, res) => {
             account_no: account_no || '', 
             ifsc: ifsc || '', 
             upi_id: upi_id || '',
-            qr_image: qr_image || (user.bank_details ? user.bank_details.qr_image : '')
+            qr_image: user.bank_details ? user.bank_details.qr_image : ''
         };
         
         user.markModified('bank_details');
@@ -232,19 +232,23 @@ app.post('/save-bank', async (req, res) => {
 app.post('/submit-withdraw', async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
-        const { amount, method, details } = req.body;
+        const { amount, method, details, qr_image } = req.body;
         let user = await User.findById(req.session.user._id);
         let withdrawAmount = parseFloat(amount);
 
         if (user.balance >= withdrawAmount && withdrawAmount > 0) {
             user.balance -= withdrawAmount;
             if (!user.withdraw_history) user.withdraw_history = [];
+            
+            // Use newly uploaded QR or fallback to saved bank QR
+            let finalQR = qr_image || (user.bank_details ? user.bank_details.qr_image : '');
+
             user.withdraw_history.unshift({
                 id: Date.now(), 
                 amount: withdrawAmount, 
                 method, 
                 details,
-                qr_image: user.bank_details ? user.bank_details.qr_image : '', // QR Code captured here for Admin
+                qr_image: finalQR,
                 date: new Date().toLocaleString(), 
                 status: 'Pending'
             });
@@ -345,7 +349,6 @@ app.post('/admin/reject/:id', async (req, res) => {
     } catch (err) { res.redirect('/admin'); }
 });
 
-// Admin Withdrawal Approve Route
 app.post('/admin/withdraw/approve/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
@@ -365,7 +368,6 @@ app.post('/admin/withdraw/approve/:id', async (req, res) => {
     } catch (err) { res.redirect('/admin'); }
 });
 
-// Admin Withdrawal Reject Route (Refunds balance back to user)
 app.post('/admin/withdraw/reject/:id', async (req, res) => {
     if (!req.session.admin) return res.redirect('/admin-login');
     try {
@@ -375,7 +377,7 @@ app.post('/admin/withdraw/reject/:id', async (req, res) => {
                 let tx = user.withdraw_history.find(t => t.id == req.params.id);
                 if (tx && tx.status === 'Pending') {
                     tx.status = 'Rejected';
-                    user.balance += tx.amount; // Refund amount back
+                    user.balance += tx.amount; 
                     user.markModified('withdraw_history');
                     await user.save();
                     break;
