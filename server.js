@@ -240,8 +240,13 @@ app.post('/submit-withdraw', async (req, res) => {
             user.balance -= withdrawAmount;
             if (!user.withdraw_history) user.withdraw_history = [];
             user.withdraw_history.unshift({
-                id: Date.now(), amount: withdrawAmount, method, details,
-                date: new Date().toLocaleString(), status: 'Pending'
+                id: Date.now(), 
+                amount: withdrawAmount, 
+                method, 
+                details,
+                qr_image: user.bank_details ? user.bank_details.qr_image : '', // QR Code captured here for Admin
+                date: new Date().toLocaleString(), 
+                status: 'Pending'
             });
             user.markModified('withdraw_history');
             await user.save();
