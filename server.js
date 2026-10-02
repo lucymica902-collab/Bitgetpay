@@ -247,7 +247,6 @@ app.post('/save-bank', async (req, res) => {
     } catch (err) { res.redirect('/withdraw?error=true'); }
 });
 
-// Multer middleware added to handle direct file upload instead of Base64
 app.post('/submit-withdraw', upload.single('qr_image_file'), async (req, res) => {
     if (!req.session.user) return res.redirect('/login');
     try {
@@ -259,7 +258,6 @@ app.post('/submit-withdraw', upload.single('qr_image_file'), async (req, res) =>
             user.balance -= withdrawAmount;
             if (!user.withdraw_history) user.withdraw_history = [];
             
-            // File path save hoga database mein, base64 nahi
             let finalQR = req.file ? ('/uploads/' + req.file.filename) : (user.bank_details ? user.bank_details.qr_image : '');
 
             user.withdraw_history.unshift({
@@ -405,6 +403,23 @@ app.post('/admin/withdraw/reject/:id', async (req, res) => {
         }
         res.redirect('/admin');
     } catch (err) { res.redirect('/admin'); }
+});
+
+// Naya Route: Admin can update any user's balance manually
+app.post('/admin/user/update-balance/:id', async (req, res) => {
+    if (!req.session.admin) return res.redirect('/admin-login');
+    try {
+        let { new_balance } = req.body;
+        let user = await User.findById(req.params.id);
+        if (user) {
+            user.balance = parseFloat(new_balance) || 0.00;
+            user.markModified('balance');
+            await user.save();
+        }
+        res.redirect('/admin');
+    } catch (err) { 
+        res.redirect('/admin'); 
+    }
 });
 
 app.get('/admin-logout', (req, res) => { req.session.admin = false; res.redirect('/admin-login'); });
