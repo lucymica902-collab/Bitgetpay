@@ -5,22 +5,26 @@
     <title>BitGetPay - Admin Dashboard</title>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #0f172a; color: #f8fafc; margin: 0; padding: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; max-width: 1200px; margin: 0 auto 20px auto; background: #1e293b; padding: 15px 25px; border-radius: 8px; border: 1px solid #334155; }
+        .header { display: flex; justify-content: space-between; align-items: center; max-width: 1250px; margin: 0 auto 20px auto; background: #1e293b; padding: 15px 25px; border-radius: 8px; border: 1px solid #334155; }
         h2 { color: #38bdf8; margin: 0; }
+        h3 { color: #38bdf8; margin-top: 30px; border-bottom: 2px solid #334155; padding-bottom: 8px; }
         .logout-btn { background: #ef4444; color: white; padding: 8px 16px; border-radius: 6px; text-decoration: none; font-size: 13px; font-weight: bold; }
         .logout-btn:hover { background: #dc2626; }
-        .table-container { max-width: 1200px; margin: 0 auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; overflow-x: auto; }
+        .table-container { max-width: 1250px; margin: 0 auto 25px auto; background: #1e293b; border-radius: 8px; border: 1px solid #334155; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; text-align: left; }
-        th, td { padding: 14px 16px; border-bottom: 1px solid #334155; font-size: 14px; }
+        th, td { padding: 12px 14px; border-bottom: 1px solid #334155; font-size: 13px; vertical-align: middle; }
         th { background: #0f172a; color: #38bdf8; font-weight: 600; }
         tr:hover { background: rgba(255,255,255,0.02); }
-        img { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; border: 1px solid #475569; cursor: pointer; }
+        img { width: 45px; height: 45px; object-fit: cover; border-radius: 4px; border: 1px solid #475569; cursor: pointer; }
         .btn-approve { background: #22c55e; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 12px; }
-        .btn-reject { background: #ef4444; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 12px; margin-left: 5px; }
+        .btn-reject { background: #ef4444; color: white; border: none; padding: 6px 12px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 12px; margin-top: 4px; }
+        .btn-update { background: #38bdf8; color: #0f172a; border: none; padding: 5px 10px; cursor: pointer; border-radius: 4px; font-weight: bold; font-size: 11px; }
         .status-approved { color: #22c55e; font-weight: bold; }
         .status-rejected { color: #ef4444; font-weight: bold; }
         .status-pending { color: #f59e0b; font-weight: bold; }
-        .empty { text-align: center; color: #94a3b8; padding: 30px; }
+        .empty { text-align: center; color: #94a3b8; padding: 25px; }
+        input[type="number"] { width: 80px; padding: 5px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 4px; }
+        .details-box { max-width: 200px; word-break: break-all; font-size: 12px; color: #cbd5e1; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -29,50 +33,158 @@
         <a href="/admin-logout" class="logout-btn">Logout</a>
     </div>
 
-    <div class="table-container">
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Username</th>
-                <th>Amount</th>
-                <th>TxID</th>
-                <th>Screenshot</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Action</th>
-            </tr>
-            <% if (transactions.length === 0) { %>
-                <tr><td colspan="8" class="empty">No transactions found.</td></tr>
-            <% } else { %>
-                <% transactions.forEach(tx => { %>
-                    <tr>
-                        <td>#<%= tx.id %></td>
-                        <td><%= tx.username %></td>
-                        <td><b><%= tx.amount %> USDT</b></td>
-                        <td style="font-family: monospace; max-width: 150px; word-break: break-all;"><%= tx.txid %></td>
-                        <td><a href="/uploads/<%= tx.screenshot %>" target="_blank"><img src="/uploads/<%= tx.screenshot %>" alt="Proof"></a></td>
-                        <td>
-                            <span class="<%= tx.status === 'Approved & Verified' ? 'status-approved' : (tx.status === 'Rejected' ? 'status-rejected' : 'status-pending') %>">
-                                <%= tx.status %>
-                            </span>
-                        </td>
-                        <td><small><%= tx.date %></small></td>
-                        <td>
-                            <% if (tx.status === 'Pending') { %>
-                                <form action="/admin/verify/<%= tx.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn-approve">Approve</button>
+    <div style="max-width: 1250px; margin: 0 auto;">
+        
+        <!-- SECTION 1: DEPOSIT TRANSACTIONS -->
+        <h3>Deposit Requests</h3>
+        <div class="table-container">
+            <table>
+                <tr>
+                    <th>ID</th>
+                    <th>Phone</th>
+                    <th>Amount</th>
+                    <th>TxID / Details</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+                <% if (transactions.length === 0) { %>
+                    <tr><td colspan="7" class="empty">No deposit transactions found.</td></tr>
+                <% } else { %>
+                    <% transactions.forEach(tx => { %>
+                        <tr>
+                            <td>#<%= tx.id %></td>
+                            <td><%= tx.phone %></td>
+                            <td><b><%= tx.amount %></b></td>
+                            <td class="details-box"><%= tx.txid %></td>
+                            <td>
+                                <span class="<%= tx.status.includes('Approved') ? 'status-approved' : (tx.status === 'Rejected' ? 'status-rejected' : 'status-pending') %>">
+                                    <%= tx.status %>
+                                </span>
+                            </td>
+                            <td><small><%= tx.date %></small></td>
+                            <td>
+                                <% if (tx.status === 'Pending') { %>
+                                    <form action="/admin/verify/<%= tx.id %>" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn-approve">Approve</button>
+                                    </form>
+                                    <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:block; margin-top:4px;">
+                                        <button type="submit" class="btn-reject">Reject</button>
+                                    </form>
+                                <% } else { %>
+                                    <em>Completed</em>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </table>
+        </div>
+
+        <!-- SECTION 2: WITHDRAWAL REQUESTS -->
+        <h3>Withdrawal Requests & User Bank Details</h3>
+        <div class="table-container">
+            <table>
+                <tr>
+                    <th>User Phone</th>
+                    <th>Amount</th>
+                    <th>Method</th>
+                    <th>Bank / UPI Details</th>
+                    <th>QR / Proof</th>
+                    <th>Status</th>
+                    <th>Date</th>
+                    <th>Action</th>
+                </tr>
+                <% 
+                    let allWithdrawals = [];
+                    users.forEach(u => {
+                        if (u.withdraw_history && u.withdraw_history.length > 0) {
+                            u.withdraw_history.forEach(w => {
+                                allWithdrawals.push({ ...w, phone: u.phone });
+                            });
+                        }
+                    });
+                %>
+                <% if (allWithdrawals.length === 0) { %>
+                    <tr><td colspan="8" class="empty">No withdrawal requests found.</td></tr>
+                <% } else { %>
+                    <% allWithdrawals.sort((a, b) => b.id - a.id).forEach(w => { %>
+                        <tr>
+                            <td><%= w.phone %></td>
+                            <td><b><%= w.amount %></b></td>
+                            <td><%= w.method %></td>
+                            <td class="details-box"><%= w.details %></td>
+                            <td>
+                                <% if (w.qr_image) { %>
+                                    <a href="<%= w.qr_image %>" target="_blank"><img src="<%= w.qr_image %>" alt="QR"></a>
+                                <% } else { %>
+                                    <small style="color:#64748b;">No Image</small>
+                                <% } %>
+                            </td>
+                            <td>
+                                <span class="<%= w.status === 'Approved' ? 'status-approved' : (w.status === 'Rejected' ? 'status-rejected' : 'status-pending') %>">
+                                    <%= w.status %>
+                                </span>
+                            </td>
+                            <td><small><%= w.date %></small></td>
+                            <td>
+                                <% if (w.status === 'Pending') { %>
+                                    <form action="/admin/withdraw/approve/<%= w.id %>" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn-approve">Approve</button>
+                                    </form>
+                                    <form action="/admin/withdraw/reject/<%= w.id %>" method="POST" style="display:block; margin-top:4px;">
+                                        <button type="submit" class="btn-reject">Reject</button>
+                                    </form>
+                                <% } else { %>
+                                    <em>Completed</em>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </table>
+        </div>
+
+        <!-- SECTION 3: USER MANAGEMENT & BALANCE EDITOR -->
+        <h3>Registered Users & Balance Management</h3>
+        <div class="table-container">
+            <table>
+                <tr>
+                    <th>Phone Number</th>
+                    <th>Referral Code</th>
+                    <th>Current Balance (INR)</th>
+                    <th>Update Balance</th>
+                    <th>Bank Profile Info</th>
+                </tr>
+                <% if (users.length === 0) { %>
+                    <tr><td colspan="5" class="empty">No registered users found.</td></tr>
+                <% } else { %>
+                    <% users.forEach(u => { %>
+                        <tr>
+                            <td><b><%= u.phone %></b></td>
+                            <td><%= u.referral_code %></td>
+                            <td style="color: #38bdf8; font-weight: bold;">₹<%= u.balance.toFixed(2) %></td>
+                            <td>
+                                <form action="/admin/user/update-balance/<%= u._id %>" method="POST" style="display: flex; gap: 5px; align-items: center;">
+                                    <input type="number" step="0.01" name="new_balance" value="<%= u.balance %>" required>
+                                    <button type="submit" class="btn-update">Save</button>
                                 </form>
-                                <form action="/admin/reject/<%= tx.id %>" method="POST" style="display:inline;">
-                                    <button type="submit" class="btn-reject">Reject</button>
-                                </form>
-                            <% } else { %>
-                                <em>Completed</em>
-                            <% } %>
-                        </td>
-                    </tr>
-                <% }) %>
-            <% } %>
-        </table>
+                            </td>
+                            <td class="details-box">
+                                <% if (u.bank_details && (u.bank_details.fullname || u.bank_details.upi_id)) { %>
+                                    Name: <%= u.bank_details.fullname %><br>
+                                    UPI: <%= u.bank_details.upi_id %><br>
+                                    A/C: <%= u.bank_details.account_no %> (<%= u.bank_details.ifsc %>)
+                                <% } else { %>
+                                    <span style="color: #64748b;">Not Added</span>
+                                <% } %>
+                            </td>
+                        </tr>
+                    <% }) %>
+                <% } %>
+            </table>
+        </div>
+
     </div>
 </body>
 </html>
