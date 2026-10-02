@@ -6,16 +6,18 @@
     <title>Admin Panel - Bitgetpay</title>
     <style>
         body { font-family: sans-serif; background: #121212; color: #fff; margin: 0; padding: 20px; }
-        .container { max-width: 1000px; margin: auto; }
-        .card { background: #1e1e1e; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; }
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; font-size: 14px; }
+        .container { max-width: 1100px; margin: auto; }
+        .card { background: #1e1e1e; padding: 20px; border-radius: 10px; margin-bottom: 20px; border: 1px solid #333; overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; min-width: 700px; }
+        th, td { padding: 10px; border-bottom: 1px solid #333; text-align: left; font-size: 14px; vertical-align: middle; }
         th { color: #eab308; }
-        input, select { padding: 8px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 5px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        input, select { padding: 8px; background: #2a2a2a; border: 1px solid #444; color: #fff; border-radius: 5px; margin: 5px 0; box-sizing: border-box; }
         button { padding: 8px 15px; background: #eab308; color: #000; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
         .btn-danger { background: #ef4444; color: #fff; }
         .btn-success { background: #22c55e; color: #fff; }
+        .btn-update { background: #38bdf8; color: #000; padding: 6px 10px; font-size: 12px; }
         .logout { float: right; color: #ef4444; text-decoration: none; font-weight: bold; }
+        .details-box { word-break: break-all; font-size: 12px; color: #cbd5e1; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -26,10 +28,9 @@
         <!-- Settings Management (TRC Address & Deposit QR Update) -->
         <div class="card">
             <h3>Website Settings (TRC Address & Deposit QR)</h3>
-            <!-- enctype added for file uploading -->
             <form action="/admin/settings" method="POST" enctype="multipart/form-data">
                 <label>TRC20 Deposit Address:</label>
-                <input type="text" name="trc_address" value="<%= settings.trc_address %>" required>
+                <input type="text" name="trc_address" value="<%= settings.trc_address %>" required style="width: 100%;">
 
                 <label style="margin-top: 10px; display: block;">Deposit QR Code Image:</label>
                 <% if (settings.deposit_qr) { %>
@@ -37,14 +38,13 @@
                         <img src="<%= settings.deposit_qr %>" alt="QR Preview" style="max-width: 100px; border-radius: 5px; border: 1px solid #555;">
                     </div>
                 <% } %>
-                <!-- Name attribute added: deposit_qr matches server upload.single('deposit_qr') -->
                 <input type="file" name="deposit_qr" accept="image/*" style="padding: 5px; background: #2a2a2a; border: 1px solid #444; border-radius: 5px; width: 100%;">
 
                 <label style="margin-top: 10px; display: block;">USDT Rate (1 USDT = ? INR):</label>
-                <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>">
+                <input type="text" name="usdt_rate" value="<%= settings.usdt_rate %>" style="width: 100%;">
 
                 <label style="margin-top: 10px; display: block;">Support Link:</label>
-                <input type="text" name="support_link" value="<%= settings.support_link %>">
+                <input type="text" name="support_link" value="<%= settings.support_link %>" style="width: 100%;">
 
                 <h4 style="margin-top: 20px; color: #eab308;">VIP Levels Setup</h4>
                 <% settings.vip_levels.forEach((vip, index) => { %>
@@ -80,7 +80,7 @@
                         <tr>
                             <td><%= tx.phone %></td>
                             <td><%= tx.amount %> USDT <br><small style="color: #888;">(≈ ₹<%= (tx.amount * parseFloat(settings.usdt_rate || 108.12)).toFixed(2) %>)</small></td>
-                            <td style="word-break: break-all;"><%= tx.txid %></td>
+                            <td class="details-box"><%= tx.txid %></td>
                             <td><%= tx.date %></td>
                             <td style="color: #eab308;"><%= tx.status %></td>
                             <td>
@@ -131,7 +131,7 @@
                         <tr>
                             <td><%= w.userPhone %></td>
                             <td>₹<%= w.amount.toFixed(2) %></td>
-                            <td style="word-break: break-all;"><b><%= w.method %></b>: <%= w.details %></td>
+                            <td class="details-box"><b><%= w.method %></b>: <%= w.details %></td>
                             <td>
                                 <% if (w.qr_image) { %>
                                     <a href="<%= w.qr_image %>" target="_blank">
@@ -157,22 +157,40 @@
             </table>
         </div>
 
-        <!-- Users List -->
+        <!-- Users List & Balance Management -->
         <div class="card">
             <h3>All Registered Users (<%= users.length %>)</h3>
             <table>
                 <tr>
                     <th>Phone</th>
                     <th>Balance (INR)</th>
+                    <th>Update Balance</th>
                     <th>Team Commission</th>
                     <th>Referral Code</th>
+                    <th>Bank / UPI Profile Info</th>
                 </tr>
                 <% users.forEach(u => { %>
                     <tr>
-                        <td><%= u.phone %></td>
+                        <td><b><%= u.phone %></b></td>
                         <td>₹<%= u.balance ? u.balance.toFixed(2) : '0.00' %></td>
+                        <td>
+                            <form action="/admin/user/update-balance/<%= u._id %>" method="POST" style="display: flex; gap: 5px; align-items: center; margin: 0;">
+                                <input type="number" step="0.01" name="new_balance" value="<%= u.balance %>" required style="width: 80px; margin: 0; padding: 5px;">
+                                <button type="submit" class="btn-update">Save</button>
+                            </form>
+                        </td>
                         <td>₹<%= u.team_commission ? u.team_commission.toFixed(2) : '0.00' %></td>
                         <td><%= u.referral_code %></td>
+                        <td class="details-box">
+                            <% if (u.bank_details && (u.bank_details.fullname || u.bank_details.upi_id || u.bank_details.account_no)) { %>
+                                <b>Name:</b> <%= u.bank_details.fullname %><br>
+                                <b>Bank:</b> <%= u.bank_details.bank_name %><br>
+                                <b>A/C:</b> <%= u.bank_details.account_no %> (<%= u.bank_details.ifsc %>)<br>
+                                <b>UPI:</b> <%= u.bank_details.upi_id %>
+                            <% } else { %>
+                                <span style="color: #888;">Not Added</span>
+                            <% } %>
+                        </td>
                     </tr>
                 <% }) %>
             </table>
